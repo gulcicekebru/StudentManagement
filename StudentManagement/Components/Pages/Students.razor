@@ -1,0 +1,82 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+
+@using StudentManagement.Models
+@using StudentManagement.Services
+
+@inject StudentManagement.Services.StudentService studentService
+
+
+
+
+<h3>Student Management</h3>
+<br />
+<label>Total student</label>
+<label></label>
+<label>Class average</label>
+<label></label>
+<br /><br />
+
+<input @bind="Id" @bind:event="oninput" placeholder="Enter student id" />
+<input @bind="Name" @bind:event="oninput" placeholder="Enter student name" />
+<input @bind="LastName" @bind:event="oninput" placeholder="Enter student last name" />
+<input @bind="Midterm" @bind:event="oninput" placeholder="Enter student midterm note" />
+<input @bind="Final" @bind:event="oninput" placeholder="Enter final note" />
+
+<button @onclick="() => AddStudent()">Add</button>
+
+<button @onclick="() => GetStudents()">Show All Students</button> 
+<tbody>
+    @foreach (var student in GetStudents())
+    {
+        <tr>
+            <td>@student.StudentId</td>
+            <td>@student.Name</td>
+            <td>@student.LastName</td>
+            <td>@student.Midterm</td>
+            <td>@student.Final</td>
+
+        </tr>
+    }
+</tbody>
+
+
+<label>@errorMessage</label>
+
+
+
+@code {
+    private int Id;
+    private string Name =string.Empty;
+    private string LastName = string.Empty;
+    private int Midterm;
+    private int Final;
+    private string errorMessage = string.Empty;
+    
+
+
+    private void AddStudent()
+    {
+        try
+        {
+            Student student = new Student(Id,Name,LastName,Midterm,Final);
+
+            studentService.AddStudent(student);
+
+            studentService.GetStudents();
+        }
+        catch(ArgumentException ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private List<Student> GetStudents()
+    {
+        
+        return studentService.GetStudents();
+    }
+
+
+}
