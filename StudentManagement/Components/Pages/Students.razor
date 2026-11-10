@@ -13,12 +13,12 @@
 <h3>Student Management</h3>
 <br />
 <label>Total student</label>
-<label></label>
+<label>@studentCount</label>
 <label>Class average</label>
-<label></label>
+<label>@averageNote</label>
 <br /><br />
 
-<input @bind="Id" @bind:event="oninput" placeholder="Enter student id" />
+
 <input @bind="Name" @bind:event="oninput" placeholder="Enter student name" />
 <input @bind="LastName" @bind:event="oninput" placeholder="Enter student last name" />
 <input @bind="Midterm" @bind:event="oninput" placeholder="Enter student midterm note" />
@@ -26,20 +26,63 @@
 
 <button @onclick="() => AddStudent()">Add</button>
 
-<button @onclick="() => GetStudents()">Show All Students</button> 
-<tbody>
-    @foreach (var student in GetStudents())
-    {
-        <tr>
-            <td>@student.StudentId</td>
-            <td>@student.Name</td>
-            <td>@student.LastName</td>
-            <td>@student.Midterm</td>
-            <td>@student.Final</td>
 
-        </tr>
-    }
-</tbody>
+@if (isLoading)
+{
+    <label>@errorTableMessage</label>
+}
+@if (!isLoading)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>               
+                <th>Ad</th>
+                <th>Soyad</th>
+                <th>Midterm Note</th>
+                <th>Final Note</th>
+                <th>Average</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in studentList)
+            {
+                <tr>                   
+                    <td>
+                    @if(editingId == student.StudentId)
+                    {
+                        <input @bind="student.Name" />
+                        <input @bind="student.LastName" />
+                        <input @bind="student.Midterm" />
+                        <input @bind="student.Final" />
+                    }
+                    else
+                    {
+                        <td>@student.Name</td>
+                        <td>@student.LastName</td>
+                        <td>@student.Midterm</td>
+                        <td>@student.Final</td>
+                        <td>@student.Average</td>
+                    }
+                    </td>
+                    <td>
+                        @if (editingId == student.StudentId)
+                        {
+                            <button @onclick="@(() => SaveStudent(student))">Save</button>
+                            <button @onclick="@(() => CancelEdit())">Cancel</button>
+                        }
+                        else
+                        {
+                            <button @onclick="@(() => @EnableEdit(@student.StudentId))">Update</button>
+                            <button @onclick="@(() => @studentService.DeleteStudent(student.StudentId))">Delete</button>
+                        }
+
+                    </td>                  
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 
 
 <label>@errorMessage</label>
@@ -53,30 +96,71 @@
     private int Midterm;
     private int Final;
     private string errorMessage = string.Empty;
-    
+    private string errorTableMessage = string.Empty;
+    private List<Student> studentList;
+    private bool isLoading = true;
+    private bool isTableShown = false;
+    private bool isTableErrorMessageShown = false;
+    private int studentCount;
+    private double averageNote;
+    private int? editingId;
 
+    protected override async Task OnInitializedAsync()
+    {
+        studentList = await studentService.GetStudents();
+        studentCount = studentList.Count;
+        isLoading = false;
+    }
 
-    private void AddStudent()
+    private async void AddStudent()
     {
         try
         {
-            Student student = new Student(Id,Name,LastName,Midterm,Final);
+            Student student = new Student(Name,LastName,Midterm,Final);
 
-            studentService.AddStudent(student);
+            await studentService.AddStudent(student);
 
-            studentService.GetStudents();
+            await studentService.GetStudents();
+            isLoading = false;
         }
-        catch(ArgumentException ex)
+        catch(Exception ex)
         {
             errorMessage = ex.Message;
         }
     }
 
-    private List<Student> GetStudents()
+    private void EnableEdit(int studentId)
     {
-        
-        return studentService.GetStudents();
+        editingId = studentId;
     }
+
+    private async void SaveStudent(Student student)
+    {
+        studentService.UpdateStudent(student);
+        editingId = null;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+    }
+    // private async void GetStudents()
+    // {
+    //     studentList = studentService.GetStudents();
+    //     if(studentList. != 0)
+    //     {
+    //         isTableShown = true;
+    //         errorTableMessage = "";
+    //     }
+    //     else if (studentList.Count == 0)
+    //     {
+    //         isTableShown = false;
+    //         errorTableMessage = "No students found.";
+    //         isTableErrorMessageShown = true;
+    //     }
+
+    // }
+
 
 
 }

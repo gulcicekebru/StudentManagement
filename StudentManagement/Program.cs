@@ -1,16 +1,22 @@
+using Microsoft.EntityFrameworkCore;
 using StudentManagement.Components;
+using StudentManagement.Data;
 using StudentManagement.Models;
 using StudentManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<StudentDbContext>(options =>
+     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<StudentService>();
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents().AddInteractiveServerComponents();
+
+
 
 var app = builder.Build();
 
