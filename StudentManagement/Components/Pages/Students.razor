@@ -15,16 +15,35 @@
 <label>Total student</label>
 <label>@studentCount</label>
 <label>Class average</label>
-<label>@averageNote</label>
+<label>@((averageNote ?? 0).ToString("F2"))</label>
 <br /><br />
 
+<EditForm Model= "@student" OnValidSubmit="@AddStudent" FormName="StudentAddingForm" Enhance>
+    <DataAnnotationsValidator/>
+    <ValidationSummary class="text-error"/>
+    <div class="form-group">
+        <label for="name" class="form-label">Name:</label>
+        <InputText id="name" @bind-Value="student.Name" class="form-control" @bind:event="oninput" placeholder="Enter student name" />
+        <ValidationMessage For="@(() => student.Name)" class="text-error" />
+    </div>
+    <div class="form-group">
+        <label for="lastName" class="form-label">Last Name:</label>
+        <InputText id="lastName" @bind-Value="student.LastName" class="form-control" @bind:event="oninput" placeholder="Enter student last name" />
+        <ValidationMessage For="@(() => student.LastName)" class="text-error" />
+    </div>
+    <div class="form-group">
+        <label for="midterm" class="form-label">Midterm:</label>
+        <InputNumber id="midterm" @bind-Value="student.Midterm" class="form-control" @bind:event="oninput" placeholder="Enter student midterm note" />
+        <ValidationMessage For="@(() => student.Midterm)" class="text-error" />
+    </div>
+    <div class="form-group">
+        <label for="final" class="form-label">Final:</label>
+        <InputNumber id="final" @bind-Value="student.Final" class="form-control" @bind:event="oninput" placeholder="Enter student final note" />
+        <ValidationMessage For="@(() => student.Final)" class="text-error" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
 
-<input @bind="Name" @bind:event="oninput" placeholder="Enter student name" />
-<input @bind="LastName" @bind:event="oninput" placeholder="Enter student last name" />
-<input @bind="Midterm" @bind:event="oninput" placeholder="Enter student midterm note" />
-<input @bind="Final" @bind:event="oninput" placeholder="Enter final note" />
-
-<button @onclick="() => AddStudent()">Add</button>
+</EditForm>
 
 
 @if (isLoading)
@@ -33,63 +52,89 @@
 }
 @if (!isLoading)
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>               
-                <th>Ad</th>
-                <th>Soyad</th>
-                <th>Midterm Note</th>
-                <th>Final Note</th>
-                <th>Average</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var student in studentList)
-            {
-                <tr>                   
-                    <td>
-                    @if(editingId == student.StudentId)
-                    {
-                        <input @bind="student.Name" />
-                        <input @bind="student.LastName" />
-                        <input @bind="student.Midterm" />
-                        <input @bind="student.Final" />
-                    }
-                    else
-                    {
-                        <td>@student.Name</td>
-                        <td>@student.LastName</td>
-                        <td>@student.Midterm</td>
-                        <td>@student.Final</td>
-                        <td>@student.Average</td>
-                    }
-                    </td>
-                    <td>
-                        @if (editingId == student.StudentId)
+    <EditForm Model="@studentUpdate" OnValidSubmit="@(() => SaveStudent(studentUpdate))" FormName="editForm" Enhance>
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="text-danger"/>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Ad</th>
+                    <th>Soyad</th>
+                    <th>Midterm Note</th>
+                    <th>Final Note</th>
+                    <th>Average</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in studentList)
+                {
+                    <tr>
+
+                        @if (editingId == item.StudentId)
                         {
-                            <button @onclick="@(() => SaveStudent(student))">Save</button>
-                            <button @onclick="@(() => CancelEdit())">Cancel</button>
+                            <td>
+                                <InputText id="name" @bind-Value="studentUpdate.Name" class="form-control" @bind:event="oninput" />
+                                <ValidationMessage For="@(() => studentUpdate.Name)" class="text-error" />
+                            </td>                           
+                            <td><InputText id="lastName" @bind-Value="studentUpdate.LastName" class="form-control" @bind:event="oninput"/>
+                                <ValidationMessage For="@(() => studentUpdate.LastName)" class="text-error" />
+                            </td>
+                            <td>
+                                <InputNumber id="midterm" @bind-Value="studentUpdate.Midterm" class="form-control" @bind:event="oninput" />
+                                <ValidationMessage For="@(() => studentUpdate.Midterm)" class="text-error" />
+                            </td>
+                            <td>
+                                <InputNumber id="final" @bind-Value="studentUpdate.Final" class="form-control" @bind:event="oninput" />
+                                <ValidationMessage For="@(() => studentUpdate.Final)" class="text-error" />
+                            </td>
+                            <td>@item.Average</td>
+                            <td>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <button @onclick="@(() => CancelEdit())">Cancel</button>
+                            </td>
                         }
                         else
                         {
-                            <button @onclick="@(() => @EnableEdit(@student.StudentId))">Update</button>
-                            <button @onclick="@(() => @studentService.DeleteStudent(student.StudentId))">Delete</button>
-                        }
+                            <td>@item.Name</td>
+                            <td>@item.LastName</td>
+                            <td>@item.Midterm</td>
+                            <td>@item.Final</td>
+                            <td>@((item.Average ?? 0).ToString("F2"))</td>
 
-                    </td>                  
-                </tr>
-            }
-        </tbody>
-    </table>
+                            
+                            <td>
+                                <button type="button" @onclick="@(() => @EnableEdit(item))">Update</button>
+                                <button type="button" @onclick="@(() => DeleteRecord(item.StudentId))">Delete</button>
+
+                            </td>
+                        }
+                        <td>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </EditForm>
+    
 }
 
 
 
-<label>@errorMessage</label>
+@* <label>@errorMessage</label> *@
 
 
 
 @code {
+    [SupplyParameterFromForm(FormName = "StudentAddingForm")]
+    private Student student { get; set; } = new();
+
+    [SupplyParameterFromForm(FormName = "editForm")]
+    private Student studentUpdate { get; set; } = new();
+
+
     private int Id;
     private string Name =string.Empty;
     private string LastName = string.Empty;
@@ -102,21 +147,31 @@
     private bool isTableShown = false;
     private bool isTableErrorMessageShown = false;
     private int studentCount;
-    private double averageNote;
+    private double? averageNote;
     private int? editingId;
+    private bool isAddable = false;
+
+
 
     protected override async Task OnInitializedAsync()
     {
-        studentList = await studentService.GetStudents();
+        await GetUpdatedList();
         studentCount = studentList.Count;
+        averageNote = await studentService.GetClassAverage();
         isLoading = false;
+    }
+
+    private async Task GetUpdatedList()
+    {
+        studentList = await studentService.GetStudents();
     }
 
     private async void AddStudent()
     {
         try
         {
-            Student student = new Student(Name,LastName,Midterm,Final);
+            isAddable = true;
+            // Student student = new Student(Name,LastName,Midterm,Final);
 
             await studentService.AddStudent(student);
 
@@ -126,18 +181,38 @@
         catch(Exception ex)
         {
             errorMessage = ex.Message;
+            isAddable = false;
         }
+        await GetUpdatedList();
     }
 
-    private void EnableEdit(int studentId)
+    private void EnableEdit(Student studentEdit)
     {
-        editingId = studentId;
+        editingId = studentEdit.StudentId;
+        studentUpdate= new Student
+            {
+                StudentId=studentEdit.StudentId,
+                Name = studentEdit.Name,
+                LastName = studentEdit.LastName,
+                Midterm = studentEdit.Midterm,
+                Final = studentEdit.Final
+            };
+
+    }
+
+    private async void DeleteRecord(int studentId)
+    {
+        studentService.DeleteStudent(studentId);
+        await GetUpdatedList();
     }
 
     private async void SaveStudent(Student student)
     {
-        studentService.UpdateStudent(student);
+
+        studentService.UpdateStudent(student);       
         editingId = null;
+        
+        
     }
 
     private void CancelEdit()

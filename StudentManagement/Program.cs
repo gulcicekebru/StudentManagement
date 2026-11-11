@@ -7,7 +7,7 @@ using StudentManagement.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<StudentDbContext>(options =>
+builder.Services.AddDbContextFactory<StudentDbContext>(options =>
      options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

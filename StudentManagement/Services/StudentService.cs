@@ -6,11 +6,11 @@ namespace StudentManagement.Services
 {
     public class StudentService
     {
-        private readonly StudentDbContext _context;
+        private readonly IDbContextFactory<StudentDbContext> _contextFactory;
 
-        public StudentService(StudentDbContext context)
+        public StudentService(IDbContextFactory<StudentDbContext> contextFactory)
         {
-            _context = context;
+            _contextFactory = contextFactory;
         }
       
         public enum DeleteStudentResult
@@ -20,72 +20,97 @@ namespace StudentManagement.Services
         }
 
         public async Task AddStudent(Student student)
-        {        
-
-            if (string.IsNullOrEmpty(student.Name) || string.IsNullOrEmpty(student.LastName))
+        {
+            using (var _context = _contextFactory.CreateDbContext())
             {
-                throw new Exception("Name or lastname cannot be empthy.");
-            }
 
-            if (student.Midterm<0 || student.Midterm >= 101)
-            {
-                throw new Exception("Midterm value must be in range of 0-100");
-            }
-            if (student.Final < 0 || student.Final >= 101)
-            {
-                throw new Exception("Final value must be in range of 0-100");
-            }
+                if (string.IsNullOrEmpty(student.Name) || string.IsNullOrEmpty(student.LastName))
+                {
+                    throw new Exception("Name or lastname cannot be empthy.");
+                }
 
-            await _context.Students.AddAsync(student);
-            await _context.SaveChangesAsync();
+                if (student.Midterm < 0 || student.Midterm >= 101)
+                {
+                    throw new Exception("Midterm value must be in range of 0-100");
+                }
+                if (student.Final < 0 || student.Final >= 101)
+                {
+                    throw new Exception("Final value must be in range of 0-100");
+                }
+
+                await _context.Students.AddAsync(student);
+                await _context.SaveChangesAsync();
+
+            }
         }
 
         public async Task<List<Student>> GetStudents()
         {
-            return await _context.Students.AsNoTracking().ToListAsync();
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+                return await _context.Students.AsNoTracking().ToListAsync();
+            }
         }
 
         public async Task<int> GetStudentsCount()
         {
-            return await _context.Students.CountAsync();
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+                return await _context.Students.CountAsync();
+            }
         }
 
-        public async Task<double> GetClassAverage()
+        public async Task<double?> GetClassAverage()
         {
-            double sum = 0;
-            foreach(var student in _context.Students){
-                sum += student.Average;               
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+                double? sum = 0;
+                foreach (var student in _context.Students)
+                {
+                    sum += student.Average;
+                }
+                double studentCount = _context.Students.Count();
+                return sum / studentCount;
             }
-            double studentCount = _context.Students.Count();
-            return sum / studentCount;
         }
         public async void DeleteStudent(int studentId)
         {
-            foreach(var student in _context.Students)
+            using (var _context = _contextFactory.CreateDbContext())
             {
-                if(student.StudentId == studentId)
+                foreach (var student in _context.Students)
                 {
-                    _context.Students.Remove(student);
+                    if (student.StudentId == studentId)
+                    {
+                        _context.Students.Remove(student);
 
+                    }
+                    else
+                    {
+                        //return DeleteStudentResult.NotFound;
+                    }
                 }
-            }
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+                //return DeleteStudentResult.Deleted;
+            }
         }
 
         public async void UpdateStudent(Student student)
         {
-            foreach(var record in _context.Students)
+            using (var _context = _contextFactory.CreateDbContext())
             {
-                if(record.StudentId == student.StudentId)
+                foreach (var record in _context.Students)
                 {
-                    record.Name = student.Name;
-                    record.LastName = student.LastName;
-                    record.Midterm = student.Midterm;
-                    record.Final = student.Final;
+                    if (record.StudentId == student.StudentId)
+                    {
+                        record.Name = student.Name;
+                        record.LastName = student.LastName;
+                        record.Midterm = student.Midterm;
+                        record.Final = student.Final;
+                    }
                 }
+                await _context.SaveChangesAsync();
             }
-            await _context.SaveChangesAsync();
         }
     }
 }
