@@ -12,7 +12,7 @@ namespace StudentManagement.Services
         {
             _contextFactory = contextFactory;
         }
-      
+
         public enum DeleteStudentResult
         {
             Deleted,
@@ -73,7 +73,7 @@ namespace StudentManagement.Services
                 return sum / studentCount;
             }
         }
-        public async void DeleteStudent(int studentId)
+        public async Task DeleteStudent(int studentId)
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
@@ -95,7 +95,7 @@ namespace StudentManagement.Services
             }
         }
 
-        public async void UpdateStudent(Student student)
+        public async Task UpdateStudent(Student student)
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
@@ -104,12 +104,54 @@ namespace StudentManagement.Services
                     if (record.StudentId == student.StudentId)
                     {
                         record.Name = student.Name;
+                        record.Name = student.Name;
                         record.LastName = student.LastName;
                         record.Midterm = student.Midterm;
                         record.Final = student.Final;
                     }
                 }
                 await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<Student>> SearchStudent(string searchText)
+        {
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+
+              return await _context.Students.Where(x => x.Name.Contains(searchText) ||  x.LastName.Contains(searchText)).OrderByDescending(x => x.Name).ToListAsync();
+                
+
+            }
+        }
+
+        public async Task<List<Student>> StudentSort(string chosenOption)
+        {
+            using(var _context = _contextFactory.CreateDbContext())
+            {
+                if(chosenOption == "Name (A-Z)")
+                {
+                    return await _context.Students.OrderBy(x => x.Name).ToListAsync();
+
+                }else if(chosenOption == "Name(Z-A)")
+                {
+                    return await _context.Students.OrderByDescending(x => x.Name).ToListAsync();
+
+                }
+                else if(chosenOption == "Average(Ascending)")
+                {
+                    return await _context.Students.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToListAsync();
+
+
+                }
+                else if(chosenOption == "Average (Descending)")
+                {
+                    return await _context.Students.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToListAsync();
+                }
+                else
+                {
+                    return await _context.Students.ToListAsync();
+                }
             }
         }
     }

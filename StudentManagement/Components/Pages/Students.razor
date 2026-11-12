@@ -16,6 +16,7 @@
 <label>@studentCount</label>
 <label>Class average</label>
 <label>@((averageNote ?? 0).ToString("F2"))</label>
+
 <br /><br />
 
 <EditForm Model= "@student" OnValidSubmit="@AddStudent" FormName="StudentAddingForm" Enhance>
@@ -41,7 +42,10 @@
         <InputNumber id="final" @bind-Value="student.Final" class="form-control" @bind:event="oninput" placeholder="Enter student final note" />
         <ValidationMessage For="@(() => student.Final)" class="text-error" />
     </div>
+    <br />
     <button type="submit" class="btn btn-primary">Add</button>
+    <button type="button" @onclick="ClearForm" class="btn btn-primary">Clear</button>
+    
 
 </EditForm>
 
@@ -55,6 +59,19 @@
     <EditForm Model="@studentUpdate" OnValidSubmit="@(() => SaveStudent(studentUpdate))" FormName="editForm" Enhance>
         <DataAnnotationsValidator/>
         <ValidationSummary class="text-danger"/>
+        <br />
+
+        <input class="form-control" type="text" @bind="searchingText" @bind:event="oninput" placeholder="Search..." @bind:after="SearchItem" />
+        <br />
+        <InputSelect @bind-Value="chosenOption" class="form-control" @bind:event="onchange" @bind-Value:after="() => SortingStudents(chosenOption)">
+            <option value="" disabled selected>Select an option...</option>
+            @foreach(var sortingOption in sortingOptions)
+            {
+                <option value="@sortingOption">@sortingOption</option>
+            }
+        </InputSelect>
+        
+        <br />
 
         <table class="table table-striped">
             <thead>
@@ -63,15 +80,15 @@
                     <th>Soyad</th>
                     <th>Midterm Note</th>
                     <th>Final Note</th>
-                    <th>Average</th>
+                    <th>Average</th>                   
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in studentList)
+                @foreach (var item in (isSearching? searchedStudentList : studentList))
                 {
-                    <tr>
-
+                    
+                        <tr @key="item.StudentId">
                         @if (editingId == item.StudentId)
                         {
                             <td>
@@ -95,24 +112,23 @@
                                 <button @onclick="@(() => CancelEdit())">Cancel</button>
                             </td>
                         }
+
                         else
                         {
                             <td>@item.Name</td>
                             <td>@item.LastName</td>
                             <td>@item.Midterm</td>
                             <td>@item.Final</td>
-                            <td>@((item.Average ?? 0).ToString("F2"))</td>
-
+                            <td>@((item.Average ?? 0).ToString("F2"))</td>                           
                             
                             <td>
                                 <button type="button" @onclick="@(() => @EnableEdit(item))">Update</button>
                                 <button type="button" @onclick="@(() => DeleteRecord(item.StudentId))">Delete</button>
-
                             </td>
                         }
                         <td>
                         </td>
-                    </tr>
+                        </tr>
                 }
             </tbody>
         </table>
@@ -143,6 +159,7 @@
     private string errorMessage = string.Empty;
     private string errorTableMessage = string.Empty;
     private List<Student> studentList;
+    private List<Student> searchedStudentList;
     private bool isLoading = true;
     private bool isTableShown = false;
     private bool isTableErrorMessageShown = false;
@@ -150,6 +167,13 @@
     private double? averageNote;
     private int? editingId;
     private bool isAddable = false;
+    private string searchingText=string.Empty;
+    private bool isSearching = false;
+    private int searchVersion = 0;
+    private List<string> sortingOptions = new List<string>() { "Name (A-Z)", "Name(Z-A)","Average(Ascending)","Average (Descending)"};
+    private string chosenOption = string.Empty;
+    private string isPassed = string.Empty;
+
 
 
 
@@ -166,7 +190,7 @@
         studentList = await studentService.GetStudents();
     }
 
-    private async void AddStudent()
+    private async Task AddStudent()
     {
         try
         {
@@ -184,6 +208,7 @@
             isAddable = false;
         }
         await GetUpdatedList();
+        //StateHasChanged();
     }
 
     private void EnableEdit(Student studentEdit)
@@ -197,28 +222,89 @@
                 Midterm = studentEdit.Midterm,
                 Final = studentEdit.Final
             };
+        //StateHasChanged();
 
     }
 
-    private async void DeleteRecord(int studentId)
+    private async Task DeleteRecord(int studentId)
     {
-        studentService.DeleteStudent(studentId);
+        await studentService.DeleteStudent(studentId);
         await GetUpdatedList();
+        //StateHasChanged();
     }
 
-    private async void SaveStudent(Student student)
+    private async Task SaveStudent(Student student)
     {
 
-        studentService.UpdateStudent(student);       
+        await studentService.UpdateStudent(student);  
+        await GetUpdatedList();
         editingId = null;
-        
-        
+        //StateHasChanged();
     }
 
     private void CancelEdit()
     {
         editingId = null;
     }
+
+    private async Task SearchItem()
+    {
+        int currentVersion = ++searchVersion;
+
+        try
+        {
+
+            if (string.IsNullOrWhiteSpace(searchingText))
+            {
+                isSearching = false;
+                searchedStudentList.Clear();
+                return;
+            }
+
+            string searchValue = searchingText;
+
+
+
+            var results = await studentService.SearchStudent(searchingText);
+            if (currentVersion != searchVersion)
+                return;
+
+            searchedStudentList = results;
+            isSearching = true;
+            errorMessage = "";
+
+
+        }
+        catch (Exception ex)
+        {
+            if (currentVersion != searchVersion)
+                return;
+
+            isSearching = false;
+            errorMessage = $"An error accured {ex}";
+        }
+        //StateHasChanged();
+
+    }
+    private void ClearForm()
+    {
+        student = new Student();
+        student.Name = string.Empty;
+        student.LastName = string.Empty;
+        student.Midterm = 0;
+        student.Final = 0;
+
+    }
+
+    private async Task SortingStudents(string sortingOp)
+    {
+        studentList = await studentService.StudentSort(sortingOp);
+    }
+
+
+
+
+
     // private async void GetStudents()
     // {
     //     studentList = studentService.GetStudents();
