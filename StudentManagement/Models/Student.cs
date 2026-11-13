@@ -5,7 +5,8 @@ namespace StudentManagement.Models
 {
     public class Student
     {
-        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int StudentId { get; set; }
 
         [Required]
@@ -32,7 +33,10 @@ namespace StudentManagement.Models
                 return null;
             }
         }
-        
+
+        [NotMapped]
+        public string Status => Average >= 50 ? "Passed" : "Not Passed";
+
 
         public Student(string name, string lastName, int midterm, int final)
         {        

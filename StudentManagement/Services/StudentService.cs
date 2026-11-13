@@ -60,19 +60,17 @@ namespace StudentManagement.Services
             }
         }
 
-        public async Task<double?> GetClassAverage()
+        public async Task<double?> GetClassAverage(List<Student> updatedList)
         {
-            using (var _context = _contextFactory.CreateDbContext())
-            {
                 double? sum = 0;
-                foreach (var student in _context.Students)
+                foreach (var student in updatedList)
                 {
                     sum += student.Average;
                 }
-                double studentCount = _context.Students.Count();
+                double studentCount = updatedList.Count();
                 return sum / studentCount;
-            }
         }
+
         public async Task DeleteStudent(int studentId)
         {
             using (var _context = _contextFactory.CreateDbContext())
@@ -114,45 +112,58 @@ namespace StudentManagement.Services
             }
         }
 
-        public async Task<List<Student>> SearchStudent(string searchText)
+        public async Task<List<Student>> FilteringProcesses(string searchText, string filterOption, string passedStatus)
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
+                List<Student> tempList = await _context.Students.ToListAsync();
 
-              return await _context.Students.Where(x => x.Name.Contains(searchText) ||  x.LastName.Contains(searchText)).OrderByDescending(x => x.Name).ToListAsync();
-                
+                // arama dolu mu?
+                if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                     tempList = tempList.Where(x => x.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) || x.LastName.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+                //state (passed, not passed) seçildi mi?
+                if (!string.IsNullOrWhiteSpace(passedStatus)){
+                    tempList = tempList.Where(x => x.Status == passedStatus).ToList();
+                }
+                // sıralama seçildi mi?
+                if (!string.IsNullOrWhiteSpace(filterOption))
+                {
+                  
+                        if (filterOption == "Name (A-Z)")
+                        {
+                            tempList = tempList.OrderBy(x => x.Name).ToList();
+
+                        }
+                        else if (filterOption == "Name(Z-A)")
+                        {
+                            tempList = tempList.OrderByDescending(x => x.Name).ToList();
+
+                        }
+                        else if (filterOption == "Average(Ascending)")
+                        {
+                            tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToList();
+
+
+                        }
+                        else if (filterOption == "Average (Descending)")
+                        {
+                            tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToList();
+                        }
+                        else
+                        {
+                            //studentList;
+                        }
+                    
+                }
+                return tempList;
 
             }
         }
 
-        public async Task<List<Student>> StudentSort(string chosenOption)
-        {
-            using(var _context = _contextFactory.CreateDbContext())
-            {
-                if(chosenOption == "Name (A-Z)")
-                {
-                    return await _context.Students.OrderBy(x => x.Name).ToListAsync();
-
-                }else if(chosenOption == "Name(Z-A)")
-                {
-                    return await _context.Students.OrderByDescending(x => x.Name).ToListAsync();
-
-                }
-                else if(chosenOption == "Average(Ascending)")
-                {
-                    return await _context.Students.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToListAsync();
 
 
-                }
-                else if(chosenOption == "Average (Descending)")
-                {
-                    return await _context.Students.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToListAsync();
-                }
-                else
-                {
-                    return await _context.Students.ToListAsync();
-                }
-            }
-        }
+
     }
 }
