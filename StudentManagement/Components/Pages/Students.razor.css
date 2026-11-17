@@ -9,13 +9,13 @@
     background-repeat: no-repeat;
     background-position: center;
 }
-        /* Değişken "onayli" ise */
-.durum-butonu[data-durum="1"]::before {
+/* ButtonBehavior 0 ise */
+.durum-butonu[data-durum="0"]::before {
     content: "↑";
     
 }
-        /* Değişken "beklemede" ise */
-.durum-butonu[data-durum="0"]::before {
+/* ButtonBehavior 1 ise */
+.durum-butonu[data-durum="1"]::before {
     content: "↓";
     
 }

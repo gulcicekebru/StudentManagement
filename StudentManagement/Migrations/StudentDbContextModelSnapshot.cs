@@ -21,6 +21,26 @@ namespace StudentManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("StudentManagement.Models.Course", b =>
+                {
+                    b.Property<int>("CourseId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CourseId"));
+
+                    b.Property<string>("CourseName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Credit")
+                        .HasColumnType("int");
+
+                    b.HasKey("CourseId");
+
+                    b.ToTable("Courses");
+                });
+
             modelBuilder.Entity("StudentManagement.Models.Student", b =>
                 {
                     b.Property<int>("StudentId")
@@ -28,6 +48,9 @@ namespace StudentManagement.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StudentId"));
+
+                    b.Property<int?>("CourseId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Final")
                         .HasColumnType("int");
@@ -45,7 +68,62 @@ namespace StudentManagement.Migrations
 
                     b.HasKey("StudentId");
 
+                    b.HasIndex("CourseId");
+
                     b.ToTable("Students");
+                });
+
+            modelBuilder.Entity("StudentManagement.Models.StudentCourse", b =>
+                {
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StudentId", "CourseId");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("StudentCourses");
+                });
+
+            modelBuilder.Entity("StudentManagement.Models.Student", b =>
+                {
+                    b.HasOne("StudentManagement.Models.Course", null)
+                        .WithMany("RegisteredStudents")
+                        .HasForeignKey("CourseId");
+                });
+
+            modelBuilder.Entity("StudentManagement.Models.StudentCourse", b =>
+                {
+                    b.HasOne("StudentManagement.Models.Course", "Course")
+                        .WithMany("StudentCourses")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudentManagement.Models.Student", "Student")
+                        .WithMany("StudentCourses")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("StudentManagement.Models.Course", b =>
+                {
+                    b.Navigation("RegisteredStudents");
+
+                    b.Navigation("StudentCourses");
+                });
+
+            modelBuilder.Entity("StudentManagement.Models.Student", b =>
+                {
+                    b.Navigation("StudentCourses");
                 });
 #pragma warning restore 612, 618
         }

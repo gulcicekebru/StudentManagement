@@ -1,0 +1,37 @@
+﻿
+.count-container {
+    display: flex; /* Öğeleri yan yana dizer */
+    gap: 20px; /* Kutular arası boşluk */
+    flex-wrap: wrap; /* Ekran küçülürse alt satıra geçer */
+
+}
+
+.istatistik-box {
+    display: flex;
+    flex-direction: column; /* header ve count alt alta gelir */
+    align-items: center; /* Ortalar */
+    
+    
+    border-radius: 8px;
+    background-color: #f9f9f9;
+
+    min-width: 400px;
+}
+
+.header {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.count {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.form-select {
+    flex-direction: column;
+}
+
+

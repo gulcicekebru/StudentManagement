@@ -1,0 +1,173 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+
+@using StudentManagement.Models
+@using StudentManagement.Services
+
+@inject StudentManagement.Services.StudentService studentService
+@inject StudentManagement.Services.CourseService courseService
+
+
+<h3>Student Management</h3>
+
+<h5>Academic Administration</h5>
+
+<div class="count-container">
+    @foreach (var statistic in countInfosList)
+    {
+        <div class="istatistik-box">
+            <span class="header">@statistic.CountHeaderName</span>
+            <span class="count">@statistic.HeaderCount</span>
+        </div>
+    }
+</div>
+
+<EditForm Model="@addedStudent" OnValidSubmit="@(() => EnrollStudent(addedStudent, addedCourse))" FormName="addingForm" Enhance>
+    <DataAnnotationsValidator />
+
+    <label>Student</label>
+    <InputSelect class="form-select-box" @bind-Value="addedStudent">
+        <option value="0">Select Student</option>
+        @foreach (var student in students)
+        {
+            <option value="@student.StudentId">@student.Name @student.LastName</option>
+        }
+    </InputSelect>
+
+    <InputSelect class="form-select-box" @bind-Value="addedCourse">
+        <option value="0">Select Course</option>
+        @foreach (var course in courses)
+        {
+            <option value="@course.CourseId">@course.CourseName</option>
+        }
+    </InputSelect>
+    <br />
+    <button type="submit" class="btn btn-primary mt-2">+Enroll Student</button>
+    <label>@errorMessage</label>
+</EditForm>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            @foreach (var header in headerList)
+            {
+                <th>
+                    @header.HeaderName
+
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+
+        @foreach (var item in studentAndCoursesList)
+        {
+            <tr>
+                    <td>@item.Student.Name @item.Student.LastName</td>
+                    <td>@item.Course.CourseName</td>
+                    <td>
+                    <button type="button" @onclick="@(() => DeleteRecord(item.StudentId, item.CourseId))">Delete</button>
+                    </td> 
+
+                <td>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+@code {
+    private int studentCount;
+    private int courseCount;
+    private int enrollementCount;
+
+    private List<CourseCountsInfos> countInfosList = new();
+    private int initializeCount;
+    private int addedStudent { get; set; } = new();
+    private List<Student> students = new();
+    private List<Course> courses = new();
+    private int addedCourse{ get; set; } = new();
+    private List<string> headerNames = new List<string>() { "Student", "Course", "Action" };
+    private List<StudentTableHeaders> headerList = new();
+    private int buttonBehavior;
+    private string errorMessage = string.Empty;
+    private List<StudentCourse> studentAndCoursesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        studentCount = await studentService.GetStudentsCount();
+        courseCount = await courseService.GetCourseCountAsync();
+        enrollementCount = await courseService.GetEnrollmentCount();
+
+        await courseService.InitializeCoursesAsync();
+        initializeCount = 0;
+        countInfosList = new List<CourseCountsInfos>
+        {
+            new("Students", studentCount),
+            new("Courses", courseCount),
+            new("Enrollments", enrollementCount)
+        };
+
+        students = await studentService.GetStudents();
+        courses = await courseService.GetCoursesAsync();
+
+        try
+        {
+            buttonBehavior = 0;           
+
+            foreach (var headerName in headerNames)
+            {
+                headerList.Add(new StudentTableHeaders
+                {
+                    HeaderName = headerName,
+                    ButtonBehavior = buttonBehavior,
+                    UniqueName = "btn-" + headerName
+                });
+            }
+            studentAndCoursesList = await courseService.GetEnrollmentsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+
+
+    }
+    private async Task RefreshStatistics()
+    {
+
+        enrollementCount = await courseService.GetEnrollmentCount();
+    }
+
+    private async Task EnrollStudent(int studentId, int courseId)
+    {
+        try
+        {
+            await courseService.EnrollStudentAsync(studentId, courseId);
+            studentAndCoursesList = await courseService.GetEnrollmentsAsync();
+            errorMessage = "";
+        }
+        catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+
+        await RefreshStatistics();
+        await GetUpdatedList();
+    }
+
+    private async Task GetUpdatedList()
+    {
+        studentAndCoursesList = await courseService.GetEnrollmentsAsync();
+    }
+    private async Task DeleteRecord(int studentId, int courseId)
+    {
+        await courseService.DeleteEnrollment(studentId, courseId);
+        await courseService.GetEnrollmentsAsync();
+        await RefreshStatistics();
+        await GetUpdatedList();
+    }
+}
