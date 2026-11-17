@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using StudentManagement.Components.Pages;
 using StudentManagement.Data;
 using StudentManagement.Models;
 
@@ -26,7 +27,7 @@ namespace StudentManagement.Services
 
                 if (string.IsNullOrEmpty(student.Name) || string.IsNullOrEmpty(student.LastName))
                 {
-                    throw new Exception("Name or lastname cannot be empthy.");
+                    throw new Exception("Name or lastname cannot be empty.");
                 }
 
                 if (student.Midterm < 0 || student.Midterm >= 101)
@@ -68,26 +69,25 @@ namespace StudentManagement.Services
                     sum += student.Average;
                 }
                 double studentCount = updatedList.Count();
+
+                if(studentCount == 0)
+                {
+                    throw new Exception("Student count might be zero");
+                }
                 return sum / studentCount;
+
         }
 
         public async Task DeleteStudent(int studentId)
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
-                foreach (var student in _context.Students)
+                var student = _context.Students.FirstOrDefault(x => x.StudentId == studentId);
+
+                if(student != null)
                 {
-                    if (student.StudentId == studentId)
-                    {
-                        _context.Students.Remove(student);
-
-                    }
-                    else
-                    {
-                        //return DeleteStudentResult.NotFound;
-                    }
+                    _context.Students.Remove(student);
                 }
-
                 await _context.SaveChangesAsync();
                 //return DeleteStudentResult.Deleted;
             }
@@ -97,17 +97,16 @@ namespace StudentManagement.Services
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
-                foreach (var record in _context.Students)
+                var selectedStudent = _context.Students.FirstOrDefault(x => x.StudentId == student.StudentId);
+
+                if (selectedStudent != null)
                 {
-                    if (record.StudentId == student.StudentId)
-                    {
-                        record.Name = student.Name;
-                        record.Name = student.Name;
-                        record.LastName = student.LastName;
-                        record.Midterm = student.Midterm;
-                        record.Final = student.Final;
-                    }
+                    selectedStudent.Name = student.Name;
+                    selectedStudent.LastName = student.LastName;
+                    selectedStudent.Midterm = student.Midterm;
+                    selectedStudent.Final = student.Final;
                 }
+
                 await _context.SaveChangesAsync();
             }
         }
@@ -116,54 +115,72 @@ namespace StudentManagement.Services
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
-                List<Student> tempList = await _context.Students.ToListAsync();
+                var tempList = _context.Students.AsQueryable();
 
                 // arama dolu mu?
                 if (!string.IsNullOrWhiteSpace(searchText))
                 {
-                     tempList = tempList.Where(x => x.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) || x.LastName.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+                    tempList = tempList.Where(x => x.Name.Contains(searchText) || x.LastName.Contains(searchText));
                 }
                 //state (passed, not passed) seçildi mi?
-                if (!string.IsNullOrWhiteSpace(passedStatus)){
-                    tempList = tempList.Where(x => x.Status == passedStatus).ToList();
+                if (!string.IsNullOrWhiteSpace(passedStatus))
+                {
+
+                    // tempList = tempList.Where(x => x.Status == passedStatus);
+                    // status sınıf içerisinde midterm ve final değerlerinden hesaplandığından burada
+                    // sql üzerindeki bilgilerden erişmek lazım yani o matematiği tekrar yapmak gerek.
+
+                    tempList = tempList.Where(x => (x.Midterm * 0.4 + x.Final * 0.6 >= 50 ? "Passed" : "Not Passed") == passedStatus);
+
                 }
                 // sıralama seçildi mi?
                 if (!string.IsNullOrWhiteSpace(filterOption))
                 {
-                  
-                        if (filterOption == "Name (A-Z)")
-                        {
-                            tempList = tempList.OrderBy(x => x.Name).ToList();
-
-                        }
-                        else if (filterOption == "Name(Z-A)")
-                        {
-                            tempList = tempList.OrderByDescending(x => x.Name).ToList();
-
-                        }
-                        else if (filterOption == "Average(Ascending)")
-                        {
-                            tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToList();
-
-
-                        }
-                        else if (filterOption == "Average (Descending)")
-                        {
-                            tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6)).ToList();
-                        }
-                        else
-                        {
-                            //studentList;
-                        }
+                    
+                    switch (filterOption)
+                    {
+                        case "Name0":
+                            tempList = tempList.OrderBy(x => x.Name);
+                            break;
+                        case "Name1":
+                            tempList = tempList.OrderByDescending(x => x.Name);
+                            break;
+                        case "LastName0":
+                            tempList = tempList.OrderBy(x => x.LastName);
+                            break;
+                        case "LastName1":
+                            tempList = tempList.OrderByDescending(x => x.LastName);
+                            break;
+                        case "Midterm0":
+                            tempList = tempList.OrderBy(x => x.Midterm);
+                            break;
+                        case "Midterm1":
+                            tempList = tempList.OrderByDescending(x => x.Midterm);
+                            break;
+                        case "Final0":
+                            tempList = tempList.OrderBy(x => x.Final);
+                            break;
+                        case "Final1":
+                            tempList = tempList.OrderByDescending(x => x.Final);
+                            break;
+                        case "Average0":
+                            tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6));
+                            break;
+                        case "Average1":
+                            tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6));
+                            break;
+                        case "IsPassed0":
+                            tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6) >= 50 );
+                            break;
+                        case "IsPassed1":
+                            tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6) < 50);
+                            break;
+                    }
                     
                 }
-                return tempList;
-
+                return await tempList.ToListAsync();
             }
         }
-
-
-
 
     }
 }
