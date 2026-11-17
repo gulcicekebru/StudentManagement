@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64" role="img" aria-label="Yukarı ok başı"><title>Yukarı ok başı</title><g style="fill:#FCB614" stroke="none"><circle cx="12" cy="10" r="3.5"/></g><g fill="none" stroke="#1A1A1A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></g></svg>
+<svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+	<circle cx="12" cy="12" r="10"></circle>
+	<path d="m16 12-4-4-4 4"></path>
+	<path d="M12 16V8"></path>
+</svg>

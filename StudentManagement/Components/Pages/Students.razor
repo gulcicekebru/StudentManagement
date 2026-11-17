@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/students"
 
 @rendermode InteractiveServer
 
@@ -86,14 +86,11 @@
                 <tr>
                 @foreach(var header in headerList)
                 {
-@*                         if(header.ButtonBehavior == 0)
-                        { *@
-                            <th>
+                             <th>
                                 @header.HeaderName
                                 <button id="@header.UniqueName" type="button" class="durum-butonu" data-durum="@header.ButtonBehavior"
                                     @onclick='async () => { chosenOption = $"{header.HeaderName}{header.ButtonBehavior}"; await RefreshStudentsFilter(header.UniqueName); }'>
                                 </button>
-
                             </th>
                 }
                 </tr>
@@ -147,9 +144,7 @@
                         </tr>
                 }
             </tbody>
-        </table> 
-
-        <label>@buttonBehavior</label>
+        </table>        
     </EditForm>
     
 }
@@ -184,7 +179,7 @@
     private double? averageNote;
     private int? editingId;
     private bool isAddable = false;
-    private List<string> sortingOptions = new List<string>() { "Name (A-Z)", "Name(Z-A)","Average(Ascending)","Average (Descending)"};
+    
     private List<string> stateOptions = new List<string>() { "Passed", "Not Passed" };
 
 
@@ -314,6 +309,7 @@
         editingId = null;
     }
 
+    
     //Filter
 
 

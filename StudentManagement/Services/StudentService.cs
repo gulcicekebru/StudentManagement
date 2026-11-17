@@ -151,29 +151,29 @@ namespace StudentManagement.Services
                         case "LastName1":
                             tempList = tempList.OrderByDescending(x => x.LastName);
                             break;
-                        case "Midterm0":
+                        case "Midterm1":
                             tempList = tempList.OrderBy(x => x.Midterm);
                             break;
-                        case "Midterm1":
+                        case "Midterm0":
                             tempList = tempList.OrderByDescending(x => x.Midterm);
                             break;
-                        case "Final0":
+                        case "Final1":
                             tempList = tempList.OrderBy(x => x.Final);
                             break;
-                        case "Final1":
+                        case "Final0":
                             tempList = tempList.OrderByDescending(x => x.Final);
                             break;
-                        case "Average0":
+                        case "Average1":
                             tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6));
                             break;
-                        case "Average1":
+                        case "Average0":
                             tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6));
                             break;
-                        case "IsPassed0":
-                            tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6) >= 50 );
+                        case "Is Passed0":
+                            tempList = tempList.OrderBy(x => (x.Midterm * 0.4 + x.Final * 0.6));
                             break;
-                        case "IsPassed1":
-                            tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6) < 50);
+                        case "Is Passed1":
+                            tempList = tempList.OrderByDescending(x => (x.Midterm * 0.4 + x.Final * 0.6));
                             break;
                     }
                     

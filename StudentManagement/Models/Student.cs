@@ -22,6 +22,8 @@ namespace StudentManagement.Models
         [Range(0, 100)]
         public int? Final { get; set; }
 
+        public ICollection<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
+
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public double? Average
