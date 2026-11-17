@@ -9,7 +9,6 @@
 
 
 
-
 <h3>Student Management</h3>
 <br />
 <label>Total student</label>
@@ -65,15 +64,7 @@
         <br />
         
         @* Sort Filter *@
-        <InputSelect @bind-Value="chosenOption" class="form-control" @bind:event="onchange" @bind-Value:after="() => RefreshStudents()">
-            <option value="" disabled selected>Select an option...</option>
-            @foreach(var sortingOption in sortingOptions)
-            {
-                <option value="@sortingOption">@sortingOption</option>
-            }
-        </InputSelect>
         
-        <br />
 
         @* Gecti mi gecmedi mi filter *@
         <InputSelect @bind-Value="chosenState" class="form-control" @bind:event="onchange" @bind-Value:after="() => RefreshStudents()">
@@ -84,20 +75,31 @@
             }
         </InputSelect>
 
+        <br />
+        <button type="button" @onclick="ClearFilters" class="btn btn-primary">Clear Filters</button>
 
-        <table class="table table-striped">
-            <thead>
+       
+
+
+         <table class="table table-striped">
+                <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Last Name</th>
-                    <th>Midterm Note</th>
-                    <th>Final Note</th>
-                    <th>Average</th>  
-                    <th>Is Passed</th>
-                    <th></th>
+                @foreach(var header in headerList)
+                {
+@*                         if(header.ButtonBehavior == 0)
+                        { *@
+                            <th>
+                                @header.HeaderName
+                                <button id="@header.UniqueName" type="button" class="durum-butonu" data-durum="@header.ButtonBehavior"
+                                    @onclick='async () => { chosenOption = $"{header.HeaderName}{header.ButtonBehavior}"; await RefreshStudentsFilter(header.UniqueName); }'>
+                                </button>
+
+                            </th>
+                }
                 </tr>
             </thead>
             <tbody>
+
                 @foreach (var item in studentList)
                 {
                     
@@ -122,7 +124,7 @@
                             <td>@item.Average</td>
                             <td>
                                 <button type="submit" class="btn btn-primary">Save</button>
-                                <button @onclick="@(() => CancelEdit())">Cancel</button>
+                                <button type="button" @onclick="@(() => CancelEdit())">Cancel</button>
                             </td>
                         }
 
@@ -145,16 +147,14 @@
                         </tr>
                 }
             </tbody>
-        </table>
+        </table> 
 
+        <label>@buttonBehavior</label>
     </EditForm>
     
 }
 
-
-
-@* <label>@errorMessage</label> *@
-
+@* <label>@errorMessage</label>  *@
 
 
 @code {
@@ -163,6 +163,9 @@
 
     [SupplyParameterFromForm(FormName = "editForm")]
     private Student studentUpdate { get; set; } = new();
+
+    private List<string> headerNames = new List<string>(){ "Name", "LastName", "Midterm", "Final", "Average", "Is Passed" };
+
 
 
     private int Id;
@@ -184,20 +187,50 @@
     private List<string> sortingOptions = new List<string>() { "Name (A-Z)", "Name(Z-A)","Average(Ascending)","Average (Descending)"};
     private List<string> stateOptions = new List<string>() { "Passed", "Not Passed" };
 
+
+
     private int searchVersion = 0;
     private string chosenOption = string.Empty;
     private bool isSearching = false;
     private string searchingText = string.Empty;
     private string chosenState = string.Empty;
 
+    private string butonId = "btn-";
+
+    private StudentTableHeaders headers { get; set; } = new();
+    private List<StudentTableHeaders> headerList = new();
+    private int buttonBehavior;
+
 
 
     protected override async Task OnInitializedAsync()
     {
+
         await GetUpdatedList();
         studentCount = studentList.Count;
-        averageNote = await studentService.GetClassAverage(studentList);
+        try
+        {
+            buttonBehavior = 0;
+            errorMessage = string.Empty;
+            averageNote = await studentService.GetClassAverage(studentList);
+
+            foreach(var headerName in headerNames)
+            {
+                headerList.Add(new StudentTableHeaders
+                    {
+                        HeaderName = headerName,
+                        ButtonBehavior = buttonBehavior,
+                        UniqueName = "btn-" + headerName
+                    });
+            }            
+        }
+        catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+
         isLoading = false;
+
     }
 
     private async Task GetUpdatedList()
@@ -223,9 +256,10 @@
             errorMessage = ex.Message;
             isAddable = false;
         }
+
+        await RefreshStudents();
         await RefreshStatistics();
-        await GetUpdatedList();
-        
+
         //StateHasChanged();
     }
 
@@ -257,9 +291,10 @@
     private async Task DeleteRecord(int studentId)
     {
         await studentService.DeleteStudent(studentId);
+        await RefreshStudents();
         await RefreshStatistics();
         await GetUpdatedList();
-        
+
         //StateHasChanged();
     }
 
@@ -267,6 +302,8 @@
     {
 
         await studentService.UpdateStudent(student);  
+
+        await RefreshStatistics();
         await GetUpdatedList();
         editingId = null;
         //StateHasChanged();
@@ -282,16 +319,21 @@
 
     private async Task RefreshStudents()
     {
+
         int currentVersion = ++searchVersion;
         try
         {               
             var results = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState);
 
-            if (currentVersion != searchVersion)
+            if (currentVersion != searchVersion) 
                 return;
 
             studentList = results;
             errorMessage = "";
+            //await OnInitializedAsync();
+
+            isLoading = false;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -299,12 +341,65 @@
                 return;
             errorMessage = $"An error accured {ex}";
         }        
+
+    }
+
+    private async Task RefreshStudentsFilter(string uniqueName)
+    {
+
+        int currentVersion = ++searchVersion;
+        try
+        {
+            var results = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState);
+
+            if (currentVersion != searchVersion)
+                return;
+            studentList = results;
+            foreach (var eleman in headerList)
+            {
+                if (eleman.UniqueName == uniqueName)
+                {
+                    int buttonBehavior = eleman.ButtonBehavior;
+                    if (buttonBehavior == 0)
+                    {
+                        eleman.ButtonBehavior = 1;
+                    }
+                    else
+                    {
+                        eleman.ButtonBehavior = 0;
+                    }
+                }
+            }
+            errorMessage = "";           
+
+            isLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            if (currentVersion != searchVersion)
+                return;
+            errorMessage = $"An error accured {ex}";
+        }
+
+
     }
 
     private async Task RefreshStatistics()
     {
         //islemlerden sonra (örn eklemede silmede) kişi sayısını ve ortalamayı degistirecek.
-        studentCount = studentList.Count();
-        await studentService.GetClassAverage(studentList);
+        studentCount = await studentService.GetStudentsCount();
+        averageNote = await studentService.GetClassAverage(studentList);
+    }
+
+    private async Task ClearFilters()
+    {
+        chosenOption = string.Empty;
+        isSearching = false;
+        searchingText = string.Empty;
+        chosenState = string.Empty;
+        await studentService.FilteringProcesses(searchingText, chosenOption, chosenState);
+        await RefreshStatistics();
+        await GetUpdatedList();
     }
 }
