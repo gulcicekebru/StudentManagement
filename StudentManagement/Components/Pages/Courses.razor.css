@@ -1,14 +1,26 @@
 ﻿
 .count-container {
+    margin-top:50px;
     display: flex; /* Öğeleri yan yana dizer */
     gap: 20px; /* Kutular arası boşluk */
     flex-wrap: wrap; /* Ekran küçülürse alt satıra geçer */
+    margin-bottom:10px;
 
 }
 
+.page-header {
+    font-weight: bold;
+}
+
+.page-header-exp {
+    color: #4D4D4D;
+}
+
 .istatistik-box {
-    display: flex;
-    flex-direction: column; /* header ve count alt alta gelir */
+    
+    flex-direction: column;
+    /* header ve count alt alta gelir */
+    flex:1;
     align-items: center; /* Ortalar */
     
     
@@ -33,5 +45,96 @@
 .form-select {
     flex-direction: column;
 }
+.enroll-btn {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-bottom:20px;
+}
+.filter-form-div{
+    display:flex;
+    flex-direction:row;
+    margin-bottom:20px;
+}
+::deep .form-select {
+    border-radius: 20px;
+    flex: 2;
+    margin-right: 20px;
+    border-style: solid;
+    border-color: gray;
+}
+::deep .form-search {
+    border-radius: 20px;
+    flex: 6;
+    border-style: solid;
+    margin-right: 20px;
+    padding-left: 10px;
+    border-color: gray;
+}
+.clear-btn {
+    flex:1;
+    background-color: whitesmoke;
+    border-color: gray;
+    border-style: solid;
+    color: purple;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-left: 10px;
+}
+::deep .btn-delete {
+    background-color: whitesmoke;
+    border-color: gray;
+    border-style: solid;
+    color: purple;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;   
+}
+.modal-div{
+    display:flex;
+    flex-direction:column;
+}
+.modal-column{
+    display:flex;
+    flex-direction: column;
+    margin-bottom:10px;
 
+}
+.text-label{
+    flex:4;
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:2px;
+}
+::deep .select-form {
+    padding: 10px 20px;
+    border-radius: 15px;
+    border-style: solid;
+    border-color: black;
+    border-bottom: 20px;
+    margin-bottom:10px;
+}
+.add-btn {
+    background-color: lightgray;
+    margin-top: 5px;
+    flex: 1;
+    margin-bottom: 10px;
+    border-radius: 20px;
+}
 

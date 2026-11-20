@@ -1,4 +1,13 @@
-﻿
+﻿.page-header{
+    font-weight: bold;
+}
+.page-header-exp {
+    color: #4D4D4D;
+}
+
+.durum-butonu {
+    border:none;
+}
 .durum-butonu::before {
     content: "";
     display: inline-block;
@@ -19,5 +28,152 @@
     content: "↓";
     
 }
+.card-body.d-flex align-items-center {
+    background-color: #CFE0FF;
+}
 
+.side-by-side {
+    display: flex;
+    flex-direction:row;
+    gap: 10px; /* İki eleman arasındaki boşluk */
+    align-items: center;
+}
 
+.form-control-input{
+
+}
+.container mt-5{
+    
+    display:flex;
+    flex-direction:row;
+
+}
+
+.col-md-4{
+    flex:1;
+
+}
+.col-md-5 {
+    flex: 1;
+
+}
+.form-table-div {
+    display: flex;
+    flex-direction: row;
+    
+
+}
+.icon-total{
+    background-color:lightpink;
+}
+.add-form-div {
+    margin-top: 5px;
+    margin-right: 20px;
+    border: solid;
+    border-radius: 20px;
+    border-color: purple;
+    flex: 1;
+    padding-top: 10px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+}
+.form-group{
+    margin-top:10px;
+}
+
+.table-div {
+    flex: 4;
+}
+
+    .edit-from-add {
+
+    }
+.add-text{
+    font-family:Arial;
+    font-size:20px;
+    font-weight:600;
+}
+.btn-add {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+}
+.btn-clear {
+    background-color: whitesmoke;
+    border: none;
+    color: purple;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-left:10px;
+}
+.btn-clear-filter {
+    flex:1;
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+}
+.form-control-s {
+    padding: 10px 20px;
+    border-radius: 20px;
+    border-style: solid;
+    border-color: gray;
+    flex: 8;
+}
+::deep .form-control-se {
+    
+    padding: 10px 20px;
+    border-radius: 20px;
+    border-style:solid;
+    border-color:gray;
+    padding-right:30px;
+    flex:3;
+}
+.btn-update {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+}
+.btn-delete {
+    background-color: whitesmoke;
+    border-color:gray;
+    border-style:solid;
+    color: purple;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-left: 10px;
+}
+.error-text{
+    color:red;
+}

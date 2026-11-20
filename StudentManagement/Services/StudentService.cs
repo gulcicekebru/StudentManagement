@@ -92,6 +92,14 @@ namespace StudentManagement.Services
                 //return DeleteStudentResult.Deleted;
             }
         }
+        public async Task<Student> GetStudentById(int? studentId)
+        {
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+                var student = _context.Students.Where(x => x.StudentId == studentId).FirstOrDefault();
+                return student;
+            }
+        }
 
         public async Task UpdateStudent(Student student)
         {
