@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/courses"
 
 @rendermode InteractiveServer
 
@@ -7,46 +7,115 @@
 
 @inject StudentManagement.Services.StudentService studentService
 @inject StudentManagement.Services.CourseService courseService
+@inject IJSRuntime JS
 
 
-<h3>Student Management</h3>
+<h3 class="page-header">Student Management</h3>
 
-<h5>Academic Administration</h5>
+<h7 class="page-header-exp">Academic Administration</h7>
+@if (countInfosList.Count >= 3)
+{
+    <div class="count-container">
 
-<div class="count-container">
-    @foreach (var statistic in countInfosList)
-    {
         <div class="istatistik-box">
-            <span class="header">@statistic.CountHeaderName</span>
-            <span class="count">@statistic.HeaderCount</span>
+            <IconCard Title="@countInfosList[0].CountHeaderName"
+                      Value=@countInfosList[0].HeaderCount
+                      IconClass="bi bi-people-fill" />
+
         </div>
-    }
-</div>
 
-<EditForm Model="@addedStudent" OnValidSubmit="@(() => EnrollStudent(addedStudent, addedCourse))" FormName="addingForm" Enhance>
-    <DataAnnotationsValidator />
+        <div class="istatistik-box">
+            <IconCard Title="@countInfosList[1].CountHeaderName"
+                      Value=@countInfosList[1].HeaderCount
+                      IconClass="bi bi-book" />
 
-    <label>Student</label>
-    <InputSelect class="form-select-box" @bind-Value="addedStudent">
-        <option value="0">Select Student</option>
-        @foreach (var student in students)
-        {
-            <option value="@student.StudentId">@student.Name @student.LastName</option>
-        }
-    </InputSelect>
+        </div>
 
-    <InputSelect class="form-select-box" @bind-Value="addedCourse">
-        <option value="0">Select Course</option>
+        <div class="istatistik-box">
+            <IconCard Title="@countInfosList[2].CountHeaderName"
+                      Value=@countInfosList[2].HeaderCount
+                      IconClass="bi bi-window-stack" />
+
+        </div>
+    </div>
+}
+
+    <br />
+<button type="button" class="enroll-btn" @onclick="() => isModalOpen = true">+ Enroll Student</button>
+
+ 
+<MyModal @bind-isVisible="isModalOpen" Title="Enroll Student" OnConfirm=RefreshStatistics>
+    <div class="modal-div">
+     <div class="modal-column">
+        <label class="text-label">Student</label>
+        <InputSelect class="select-form" @bind-Value="addedStudent">
+            <option value="0">Select Student</option>
+            @foreach (var student in students)
+            {
+                <option value="@student.StudentId">@student.Name @student.LastName</option>
+            }
+        </InputSelect>
+    </div>
+        <div class="modal-column">
+                <label class="text-label">Select Course</label>
+            <InputSelect class="select-form" @bind-Value="addedCourse">
+                <option value="0">Select Course</option>
+                    @foreach (var course in courses)
+                    {
+                        <option value="@course.CourseId">@course.CourseName</option>
+                    }
+                </InputSelect> 
+                   
+        </div>
+        <button class="add-btn" type="button" @onclick="@(() => EnrollStudent(addedStudent, addedCourse))">+ Add</button>
+
+
+    <table class="table table-striped">
+        <thead>
+                <tr>
+                    @foreach (var modalHeader in modalHeaderList)
+                    {
+                        <th>
+                            @modalHeader.HeaderName
+
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in @studentAndCoursesList.Where(x => x.StudentId == addedStudent))
+                {
+                    <tr>                       
+                        <td>@item.Course.CourseName</td>
+                        <td>
+                            <button class="btn-delete" type="button" @onclick="@(() => DeleteRecord(item.StudentId, item.CourseId))">Delete</button>
+ 
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    </MyModal> 
+
+    <div class="filter-form-div">
+
+    <input class="form-search" type="text" @bind="searchingText" @bind:event="oninput" placeholder="Search..." @bind:after="SearchStudentsandCourses" />
+
+    <InputSelect class="form-select" @bind-Value="selectedCourse" @bind-Value:after="() => GetSelectCourse(selectedCourse)">
+        <option value="" disabled selected>Filter Course</option>
         @foreach (var course in courses)
         {
             <option value="@course.CourseId">@course.CourseName</option>
         }
     </InputSelect>
-    <br />
-    <button type="submit" class="btn btn-primary mt-2">+Enroll Student</button>
-    <label>@errorMessage</label>
-</EditForm>
+    
+    <button class="clear-btn" @onclick="Clear" type="button" >Clear</button>
 
+
+    
+
+</div>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -67,7 +136,7 @@
                     <td>@item.Student.Name @item.Student.LastName</td>
                     <td>@item.Course.CourseName</td>
                     <td>
-                    <button type="button" @onclick="@(() => DeleteRecord(item.StudentId, item.CourseId))">Delete</button>
+                    <button class="btn-delete" type="button" @onclick="@(() => DeleteRecord(item.StudentId, item.CourseId))">Delete</button>
                     </td> 
 
                 <td>
@@ -76,31 +145,47 @@
         }
     </tbody>
 </table>
+@if (isErrorModalOpen)
+{
+    <MyErrorModal @bind-isVisible="isErrorModalOpen" Title="Error List" OnConfirm="@(() => CloseErrorModal())">
 
+        <li>@errorMessage</li>
+
+
+    </MyErrorModal>
+}
 
 
 @code {
     private int studentCount;
     private int courseCount;
     private int enrollementCount;
-
     private List<CourseCountsInfos> countInfosList = new();
     private int initializeCount;
     private int addedStudent { get; set; } = new();
     private List<Student> students = new();
     private List<Course> courses = new();
     private int addedCourse{ get; set; } = new();
-    private List<string> headerNames = new List<string>() { "Student", "Course", "Action" };
+    private List<string> headerNames = new List<string>() {"Student", "Course", "Action" };
+    private List<string> modalHeaderNames = new List<string>() { "Course", "Action" };
     private List<StudentTableHeaders> headerList = new();
+    private List<StudentTableHeaders> modalHeaderList = new();
     private int buttonBehavior;
     private string errorMessage = string.Empty;
     private List<StudentCourse> studentAndCoursesList = new();
+    private string searchingText = string.Empty;
+    private int selectedCourse;
+    private int searchVersion = 0;
+    private bool isModalOpen = false;
+    private bool isErrorModalOpen = false;
 
     protected override async Task OnInitializedAsync()
     {
+        await GetUpdatedList();
+
         studentCount = await studentService.GetStudentsCount();
         courseCount = await courseService.GetCourseCountAsync();
-        enrollementCount = await courseService.GetEnrollmentCount();
+        enrollementCount = studentAndCoursesList.Count;
 
         await courseService.InitializeCoursesAsync();
         initializeCount = 0;
@@ -127,19 +212,39 @@
                     UniqueName = "btn-" + headerName
                 });
             }
+
+            foreach (var modalHeaderName in modalHeaderNames)
+            {
+                modalHeaderList.Add(new StudentTableHeaders
+                {
+                    HeaderName = modalHeaderName,
+                    ButtonBehavior = buttonBehavior,
+                    UniqueName = "btn-" + modalHeaderName
+                });
+            }
             studentAndCoursesList = await courseService.GetEnrollmentsAsync();
         }
         catch (Exception ex)
         {
             errorMessage = ex.Message;
         }
-
-
     }
+
     private async Task RefreshStatistics()
     {
 
         enrollementCount = await courseService.GetEnrollmentCount();
+        var enrollmentStatistic = countInfosList.FirstOrDefault(x => x.CountHeaderName == "Enrollments");
+
+        if (enrollmentStatistic != null)
+        {
+            enrollmentStatistic.HeaderCount = enrollementCount;
+        }
+    }
+    private async Task CloseErrorModal()
+    {
+        errorMessage="";
+        isErrorModalOpen = false;
     }
 
     private async Task EnrollStudent(int studentId, int courseId)
@@ -149,10 +254,12 @@
             await courseService.EnrollStudentAsync(studentId, courseId);
             studentAndCoursesList = await courseService.GetEnrollmentsAsync();
             errorMessage = "";
+            isErrorModalOpen = false;
         }
         catch(Exception ex)
         {
             errorMessage = ex.Message;
+            isErrorModalOpen = true;
         }
 
         await RefreshStatistics();
@@ -162,12 +269,65 @@
     private async Task GetUpdatedList()
     {
         studentAndCoursesList = await courseService.GetEnrollmentsAsync();
+
     }
+
     private async Task DeleteRecord(int studentId, int courseId)
     {
-        await courseService.DeleteEnrollment(studentId, courseId);
-        await courseService.GetEnrollmentsAsync();
-        await RefreshStatistics();
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Are you sure?");
+
+        if (confirmed)
+        {
+            await courseService.DeleteEnrollment(studentId, courseId);           
+            await GetUpdatedList();
+            await RefreshStatistics();
+
+        }
+    }
+
+    private async Task GetSelectCourse(int courseId)
+    {
+        if (courseId == 0)
+        {
+            await GetUpdatedList();
+        }
+        else
+        {
+            studentAndCoursesList = await courseService.GetSelectedCourse(courseId);
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchStudentsandCourses()
+    {
+
+        int currentVersion = ++searchVersion;
+        try
+        {
+            var results = await courseService.SearchStudents(searchingText);
+
+            if (currentVersion != searchVersion)
+                return;
+
+            studentAndCoursesList = results;
+            errorMessage = "";
+            //await OnInitializedAsync();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            if (currentVersion != searchVersion)
+                return;
+            errorMessage = $"An error accured {ex}";
+        }
+
+    }
+
+    private async Task Clear()
+    {
+        
         await GetUpdatedList();
+
     }
 }

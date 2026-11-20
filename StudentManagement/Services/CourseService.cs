@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StudentManagement.Data;
 using StudentManagement.Models;
@@ -59,13 +60,13 @@ namespace StudentManagement.Services
                 {
                     throw new Exception("Student already added this course!");
                 }
-                    var studentCourse = new StudentCourse
-                    {
-                        StudentId = studentId,
-                        CourseId = courseId
-                    };
-                    await _context.StudentCourses.AddAsync(studentCourse);
-                    await _context.SaveChangesAsync();
+                var studentCourse = new StudentCourse
+                {
+                    StudentId = studentId,
+                    CourseId = courseId
+                };
+                await _context.StudentCourses.AddAsync(studentCourse);
+                await _context.SaveChangesAsync();
 
 
             }
@@ -92,10 +93,12 @@ namespace StudentManagement.Services
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
+                
                 return await _context.StudentCourses.
                     Include(x => x.Student)
                     .Include(x => x.Course)
                     .ToListAsync();
+                
             }
         }
 
@@ -103,7 +106,8 @@ namespace StudentManagement.Services
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
-                 await _context.StudentCourses.ToListAsync();
+                await _context.StudentCourses.ToListAsync();
+                await _context.SaveChangesAsync();
             }
         }
 
@@ -112,7 +116,9 @@ namespace StudentManagement.Services
             using (var _context = _contextFactory.CreateDbContext())
             {
                 return await _context.StudentCourses.CountAsync();
+                
             }
+
         }
 
         public async Task DeleteEnrollment(int studentId, int courseId)
@@ -120,46 +126,92 @@ namespace StudentManagement.Services
             using (var _context = _contextFactory.CreateDbContext())
             {
                 var record = _context.StudentCourses.FirstOrDefault(x => (x.StudentId == studentId && x.CourseId == courseId));
-                if(record != null)
+                if (record != null)
                 {
                     _context.StudentCourses.Remove(record);
                 }
                 await _context.SaveChangesAsync();
-                 
             }
         }
 
-        public async Task<List<StudentCourse>> FilteringProcesses(string filterOption)
+        //public async Task<List<StudentCourse>> FilteringProcesses(string filterOption)
+        //{
+        //    using (var _context = _contextFactory.CreateDbContext())
+        //    {
+        //        var tempList = _context.StudentCourses.AsQueryable();
+
+
+        //        if (!string.IsNullOrWhiteSpace(filterOption))
+        //        {
+
+        //            switch (filterOption)
+        //            {
+        //                case "Name0":
+        //                    tempList = tempList.OrderBy(x => x.Student.Name);
+        //                    break;
+        //                case "Name1":
+        //                    tempList = tempList.OrderByDescending(x => x.Student.Name);
+        //                    break;
+        //                case "Course0":
+        //                    tempList = tempList.OrderBy(x => x.Course.CourseName);
+        //                    break;
+        //                case "Course1":
+        //                    tempList = tempList.OrderByDescending(x => x.Course.CourseName);
+        //                    break;
+        //            }
+
+        //        }
+        //        return await tempList.ToListAsync();
+        //    }
+        //}
+
+        public async Task<List<StudentCourse>> SearchStudents(string searchText)
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
-                var tempList = _context.StudentCourses.AsQueryable();
+                var searchedList = _context.StudentCourses.AsQueryable();
 
+                if (!string.IsNullOrWhiteSpace(searchText)){
+                    searchedList = _context.StudentCourses.Where(x => (x.Student.Name.Contains(searchText) || x.Student.LastName.Contains(searchText)|| x.Course.CourseName.Contains(searchText)));
+                }              
+                return await searchedList.
+                    Include(x => x.Student)
+                    .Include(x => x.Course)
+                     .ToListAsync();
 
-                if (!string.IsNullOrWhiteSpace(filterOption))
-                {
-
-                    switch (filterOption)
-                    {
-                        case "Name0":
-                            tempList = tempList.OrderBy(x => x.Student.Name);
-                            break;
-                        case "Name1":
-                            tempList = tempList.OrderByDescending(x => x.Student.Name);
-                            break;
-                        case "Course0":
-                            tempList = tempList.OrderBy(x => x.Course.CourseName);
-                            break;
-                        case "Course1":
-                            tempList = tempList.OrderByDescending(x => x.Course.CourseName);
-                            break;
-                    }
-
-                }
-                return await tempList.ToListAsync();
             }
         }
 
+        public async Task<List<StudentCourse>> GetSelectedCourse(int courseId)
+        {
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+                var selectedList = _context.StudentCourses.AsQueryable();
 
+                selectedList = _context.StudentCourses.Where(x => (x.CourseId == courseId));
+
+                return await selectedList.
+                    Include(x => x.Student)
+                    .Include(x => x.Course)
+                    .ToListAsync();
+
+            }
+        }
+
+        //public async Task<List<<StudentCourse>> GetSelectedStudent(int studentId)
+        //{
+        //    using (var _context = _contextFactory.CreateDbContext())
+        //    {
+        //        var selectedStudentList = _context.StudentCourses.AsQueryable();
+
+        //         selectedStudentList =  _context.StudentCourses.Where(x => (x.StudentId == studentId));
+
+        //        return await selectedStudentList.
+        //        Include(x => x.Student)
+        //        .Include(x => x.Course)
+        //        .ToListAsync();
+
+        //    }
+        //}
     }
 }

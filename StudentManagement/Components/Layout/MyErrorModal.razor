@@ -1,0 +1,66 @@
+﻿
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5); border-color:mediumpurple">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Title</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    @ChildContent
+                </div>
+                <div class="modal-footer">
+                    <button type="button" style="    background-color: purple;
+                        border: none;
+                        color: white;
+                        padding: 5px 15px;
+                        text-align: center;
+                        text-decoration: none;
+                        display: inline-block;
+                        font-size: 16px;
+                        cursor: pointer;
+                        border-radius: 20px;" class="btn btn-primary" @onclick="ConfirmAction">
+                        Ok
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Student Course Informations";
+
+
+
+    // Modal içine farklı HTML/Razor kodları yazabilmek için RenderFragment kullanıyoruz
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    // Onay butonuna basıldığında sayfaya haber vermek için
+    [Parameter] 
+    public EventCallback OnConfirm { get; set; }
+
+
+
+    private async Task ConfirmAction()
+    {
+        await OnConfirm.InvokeAsync();
+        await CloseModal();
+    }
+    private async Task  CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+}
+
