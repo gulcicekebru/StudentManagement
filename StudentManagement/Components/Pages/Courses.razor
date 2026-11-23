@@ -44,7 +44,8 @@
 <button type="button" class="enroll-btn" @onclick="() => isModalOpen = true">+ Enroll Student</button>
 
  
-<MyModal @bind-isVisible="isModalOpen" Title="Enroll Student" OnConfirm=RefreshStatistics>
+<MyModal @bind-isVisible="isModalOpen" Title="Enroll Student" OnConfirm="ConfirmEnrollment" ShowSaveButton="false">
+
     <div class="modal-div">
      <div class="modal-column">
         <label class="text-label">Student</label>
@@ -227,6 +228,15 @@
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+        }
+    }
+    private async Task ConfirmEnrollment()
+    {
+        await EnrollStudent(addedStudent, addedCourse);
+
+        if (!isErrorModalOpen)
+        {
+            isModalOpen = false;
         }
     }
 

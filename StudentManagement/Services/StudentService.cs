@@ -107,6 +107,20 @@ namespace StudentManagement.Services
             {
                 var selectedStudent = _context.Students.FirstOrDefault(x => x.StudentId == student.StudentId);
 
+                if (string.IsNullOrEmpty(student.Name) || string.IsNullOrEmpty(student.LastName))
+                {
+                    throw new Exception("Name or lastname cannot be empty.");
+                }
+
+                if (student.Midterm < 0 || student.Midterm >= 101)
+                {
+                    throw new Exception("Midterm value must be in range of 0-100");
+                }
+                if (student.Final < 0 || student.Final >= 101)
+                {
+                    throw new Exception("Final value must be in range of 0-100");
+                }
+
                 if (selectedStudent != null)
                 {
                     selectedStudent.Name = student.Name;
