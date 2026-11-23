@@ -12,6 +12,26 @@
                     @ChildContent
                 </div>
                 <div class="modal-footer">
+                    @if (!string.IsNullOrEmpty(FormId) && ShowSaveButton)
+                    {
+                        <button type="submit"
+                                style="    background-color: purple;
+                            border: none;
+                            color: white;
+                            padding: 5px 15px;
+                            text-align: center;
+                            text-decoration: none;
+                            display: inline-block;
+                            font-size: 16px;
+                            cursor: pointer;
+                            border-radius: 20px;"
+                                form="@FormId"
+                                class="btn btn-primary">
+                            Save
+                        </button>
+                    }
+
+
                     <button type="button" style=       
     "background-color: whitesmoke;
     border: none;
@@ -24,18 +44,7 @@
     cursor: pointer;
     border-radius: 20px;
     margin-left:10px;" class="btn btn-secondary" @onclick="CloseModal">Close</button>
-                    <button type="button" style="    background-color: purple;
-                        border: none;
-                        color: white;
-                        padding: 5px 15px;
-                        text-align: center;
-                        text-decoration: none;
-                        display: inline-block;
-                        font-size: 16px;
-                        cursor: pointer;
-                        border-radius: 20px;" class="btn btn-primary" @onclick="ConfirmAction">
-                        Save
-                    </button>
+
                 </div>
             </div>
         </div>
@@ -52,6 +61,9 @@
     [Parameter]
     public string Title { get; set; } = "Student Course Informations";
 
+    [Parameter]
+    public string FormId{ get; set; }
+
 
 
     // Modal içine farklı HTML/Razor kodları yazabilmek için RenderFragment kullanıyoruz
@@ -61,14 +73,19 @@
     // Onay butonuna basıldığında sayfaya haber vermek için
     [Parameter] 
     public EventCallback OnConfirm { get; set; }
+    [Parameter]
+    public bool ShowSaveButton { get; set; } = true;
+
+    
 
 
 
     private async Task ConfirmAction()
     {
         await OnConfirm.InvokeAsync();
-        await CloseModal();
+        
     }
+
     private async Task  CloseModal()
     {
         IsVisible = false;

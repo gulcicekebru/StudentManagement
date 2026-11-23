@@ -35,31 +35,26 @@
     @if (studentToEdit != null)
         {
 
-       <MyModal @bind-isVisible="isModalOpen" Title="Update Student" OnConfirm="@(() => SaveStudent(studentToEdit))">
+    <MyModal @bind-isVisible="isModalOpen" Title="Update Student" FormId="student-update-form">
 
                 
-        <EditForm Model="@studentToEdit" EditContext="@editContext" OnValidSubmit="@(() => SaveStudent(studentToEdit))" Context="myFormContext" FormName="StudentAddingForm" Enhance>
-        <DataAnnotationsValidator />
-        <ValidationSummary class="text-error" />
+        <EditForm Model="@studentToEdit" id="student-update-form"  OnInvalidSubmit="@(context => AddErrorMessagetoList(context))" OnValidSubmit="@(() => SaveStudent(studentToEdit))" Context="myFormContext" FormName="StudentUpdateForm">
+        <DataAnnotationsValidator />        
         <div class="form-group">
             <label for="name" class="form-label">Name:</label>
-            <InputText id="name" @bind-Value="@studentToEdit.Name" class="form-control" @bind:event="oninput" placeholder="Enter student name" />
-            <ValidationMessage For="@(() => @studentToEdit.Name)" class="text-error" />
+            <InputText id="name" @bind-Value="@studentToEdit.Name" class="form-control" @bind:event="oninput" placeholder="Enter student name" />        
         </div>
         <div class="form-group">
             <label for="lastName" class="form-label">Last Name:</label>
-            <InputText id="lastName" @bind-Value="@studentToEdit.LastName" class="form-control" @bind:event="oninput" placeholder="Enter student last name" />
-            <ValidationMessage For="@(() => @studentToEdit.LastName)" class="text-error" />
+            <InputText id="lastName" @bind-Value="@studentToEdit.LastName" class="form-control" @bind:event="oninput" placeholder="Enter student last name" />            
         </div>
         <div class="form-group">
             <label for="midterm" class="form-label">Midterm:</label>
-            <InputNumber id="midterm" @bind-Value="@studentToEdit.Midterm" class="form-control" @bind:event="oninput" placeholder="Enter student midterm note" />
-            <ValidationMessage For="@(() => @studentToEdit.Midterm)" class="text-error" />
+            <InputNumber id="midterm" @bind-Value="@studentToEdit.Midterm" class="form-control" @bind:event="oninput" placeholder="Enter student midterm note" />            
         </div>
         <div class="form-group">
             <label for="final" class="form-label">Final:</label>
-            <InputNumber id="final" @bind-Value="@studentToEdit.Final" class="form-control" @bind:event="oninput" placeholder="Enter student final note" />
-            <ValidationMessage For="@(() => @studentToEdit.Final)" class="text-error" />
+            <InputNumber id="final" @bind-Value="@studentToEdit.Final" class="form-control" @bind:event="oninput" placeholder="Enter student final note" />            
         </div>
         </EditForm>
         </MyModal> 
@@ -74,23 +69,19 @@
         <div class="form-group">
             
             <label for="name" class="form-label">Name</label>
-            <InputText id="name" @bind-Value="@student.Name" class="form-control" @bind:event="oninput" placeholder="Enter student name" />
-                
+            <InputText id="name" @bind-Value="@student.Name" class="form-control" @bind:event="oninput" placeholder="Enter student name" />               
         </div>
         <div class="form-group">
             <label for="lastName" class="form-label">Last Name</label>
-            <InputText id="lastName" @bind-Value="@student.LastName" class="form-control" @bind:event="oninput" placeholder="Enter student last name" />
-            
+            <InputText id="lastName" @bind-Value="@student.LastName" class="form-control" @bind:event="oninput" placeholder="Enter student last name" />        
         </div>
         <div class="form-group">
             <label for="midterm" class="form-label">Midterm</label>
-            <InputNumber id="midterm" @bind-Value="@student.Midterm" class="form-control" @bind:event="oninput" placeholder="Enter student midterm note" />
-            
+            <InputNumber id="midterm" @bind-Value="@student.Midterm" class="form-control" @bind:event="oninput" placeholder="Enter student midterm note" />            
         </div>
         <div class="form-group">
             <label for="final" class="form-label">Final</label>
-            <InputNumber id="final" @bind-Value="@student.Final" class="form-control" @bind:event="oninput" placeholder="Enter student final note" />
-            
+            <InputNumber id="final" @bind-Value="@student.Final" class="form-control" @bind:event="oninput" placeholder="Enter student final note" />            
         </div>
         <br />
         <button type="submit" class="btn-add">Add Student</button>
@@ -109,7 +100,7 @@
     @if (!isLoading)
     {
         <div class="table-div">
-        <EditForm Model="@studentUpdate" Context="myTableContext" OnValidSubmit="@(() => SaveStudent(studentUpdate))" FormName="editForm" Enhance>
+            <EditForm Model="@studentUpdate" Context="myTableContext" OnInvalidSubmit="@(context => AddErrorMessagetoList(context))" OnValidSubmit="@(() => SaveStudent(studentUpdate))" FormName="editForm" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
             <br />
@@ -324,7 +315,7 @@
         errorList = context.GetValidationMessages().ToList();
 
         isErrorModalOpen = errorList.Count > 0;
-        
+
     }
 
     private void ClearForm()
@@ -366,13 +357,29 @@
 
     private async Task SaveStudent(Student student)
     {
+        try
+        {
+            await studentService.UpdateStudent(student);
 
-        await studentService.UpdateStudent(student);  
+            editingId = null;
+            studentToEdit = null;
+            isErrorModalOpen = false;
+            isModalOpen = false;
 
-        await RefreshStatistics();
-        await GetUpdatedList();
-        editingId = null;
-        studentToEdit = null;
+            errorList.Clear();
+
+            await RefreshStatistics();
+            await GetUpdatedList();
+        }
+        catch(Exception ex)
+        {
+            errorList = new List<string> { ex.Message };
+            
+            isErrorModalOpen = true;
+           
+        }
+
+
         //StateHasChanged();
     }
 
