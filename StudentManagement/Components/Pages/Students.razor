@@ -159,7 +159,21 @@
                             <td>
                             </td>
                         </tr>
-                    }
+                        }
+                        <div class="pagination-buttons">
+                        @if (CanGoPrevious)
+                        {
+                            <button class="btn-previous" type="button" @onclick="@(() => @PreviousPage())">Previous</button>
+                        }
+                        
+                        <label>@currentPage of @totalPage</label>
+                            @if (CanGoNext)
+                        {
+                            <button class="btn-next" type="button" @onclick="@(() => @NextPage())">Next</button>
+                        }
+                        </div>
+
+                        
                 </tbody>
             </table>
 
@@ -233,6 +247,19 @@
     private StudentTableHeaders headers { get; set; } = new();
     private List<StudentTableHeaders> headerList = new();
     private int buttonBehavior;
+    private int currentPage = 1;
+    private int pageSize = 5;
+    private int totalPage;
+    private PaginatedResult<Student>? paginatedResult;
+
+
+    private bool CanGoNext =>
+    paginatedResult is not null &&
+    paginatedResult.CurrentPage < paginatedResult.TotalPages;
+
+    private bool CanGoPrevious =>
+    paginatedResult is not null &&
+    paginatedResult.CurrentPage > 1;
 
 
 
@@ -240,13 +267,14 @@
     {
 
         await GetUpdatedList();
-        studentCount = studentList.Count;
+        studentCount = await studentService.GetStudentsCount();
+
         try
         {
             editingId = null;
             buttonBehavior = 0;
             errorMessage = string.Empty;
-            averageNote = await studentService.GetClassAverage(studentList);
+            averageNote = await studentService.GetClassAverage(await studentService.GetStudents());
 
             foreach(var headerName in headerNames)
             {
@@ -269,9 +297,72 @@
 
     private async Task GetUpdatedList()
     {
-        studentList = await studentService.GetStudents();
+
+        paginatedResult = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
+
+        studentList = paginatedResult.Items;
+        totalPage = paginatedResult.TotalPages;
+        currentPage = paginatedResult.CurrentPage;
     }
 
+    // private int currentPage = 1;
+    // private int pageSize = 10;
+    // private PaginatedResult<Student>? paginatedResult;
+
+    private async Task NextPage()
+    {
+        try
+        {
+            paginatedResult = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
+            if(paginatedResult != null && currentPage < paginatedResult.TotalPages)
+            {
+                ++currentPage;                 
+                errorList.Clear();                
+                await GetUpdatedList();              
+            }
+            if (paginatedResult != null && (currentPage == paginatedResult.TotalPages || currentPage > paginatedResult.TotalPages))
+            {
+                errorList.Clear();
+
+            }           
+        }
+        catch(Exception ex)
+        {
+            errorList.Add(ex.Message);
+            isErrorModalOpen = true;
+        }
+        // Son sayfada olup olmadığını kontrol etmeli.
+        // Son sayfada değilse currentPage değerini 1 artırmalı.
+        // Yeni sayfanın öğrencilerini servisten çekip paginatedResult değişkenine atamalı.
+    }
+
+    private async Task PreviousPage()
+    {
+        try
+        {
+            paginatedResult = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
+            if (paginatedResult != null && currentPage > 1 && currentPage <= paginatedResult.TotalPages)
+            {
+                --currentPage;
+                errorList.Clear();
+                await GetUpdatedList();
+            }
+            if(currentPage == 1)
+            {
+                await GetUpdatedList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorList.Add(ex.Message);
+            isErrorModalOpen = true;
+        }
+        // Son sayfada olup olmadığını kontrol etmeli.
+        // Son sayfada değilse currentPage değerini 1 artırmalı.
+        // Yeni sayfanın öğrencilerini servisten çekip paginatedResult değişkenine atamalı.
+
+
+    }
     private async Task CloseErrorModal()
     {
         errorList.Clear();
@@ -287,8 +378,8 @@
             errorList.Clear();
 
             await studentService.AddStudent(student);
+            await GetUpdatedList();
 
-            await studentService.GetStudents();
             isLoading = false;
             student = new();
             isErrorModalOpen = false;
@@ -304,7 +395,6 @@
             }
         }
 
-        await RefreshStudents();
         await RefreshStatistics();
 
         //StateHasChanged();
@@ -374,9 +464,9 @@
         catch(Exception ex)
         {
             errorList = new List<string> { ex.Message };
-            
+
             isErrorModalOpen = true;
-           
+
         }
 
 
@@ -389,7 +479,7 @@
         studentToEdit = null;
     }
 
-    
+
     //Filter
 
 
@@ -398,8 +488,11 @@
 
         int currentVersion = ++searchVersion;
         try
-        {               
-            var results = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState);
+        {
+            currentPage = 1;
+            await GetUpdatedList();
+            var tempPaginated = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
+            var results = tempPaginated.Items;
 
             if (currentVersion != searchVersion) 
                 return;
@@ -416,21 +509,21 @@
             if (currentVersion != searchVersion)
                 return;
             errorMessage = $"An error accured {ex}";
-        }        
+        }
+        await GetUpdatedList();
 
     }
 
     private async Task RefreshStudentsFilter(string uniqueName)
-    {
-
-        int currentVersion = ++searchVersion;
+    {       
         try
         {
-            var results = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState);
+            currentPage = 1;
+            await GetUpdatedList();
+            
+            var tempPaginated = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
+            var results = tempPaginated.Items;
 
-            if (currentVersion != searchVersion)
-                return;
-            studentList = results;
             foreach (var eleman in headerList)
             {
                 if (eleman.UniqueName == uniqueName)
@@ -452,12 +545,9 @@
             StateHasChanged();
         }
         catch (Exception ex)
-        {
-            if (currentVersion != searchVersion)
-                return;
+        {           
             errorMessage = $"An error accured {ex}";
         }
-
 
     }
 
@@ -465,7 +555,7 @@
     {
         //islemlerden sonra (örn eklemede silmede) kişi sayısını ve ortalamayı degistirecek.
         studentCount = await studentService.GetStudentsCount();
-        averageNote = await studentService.GetClassAverage(studentList);
+        averageNote = await studentService.GetClassAverage(await studentService.GetStudents());
     }
 
     private async Task ClearFilters()
@@ -474,7 +564,8 @@
         isSearching = false;
         searchingText = string.Empty;
         chosenState = string.Empty;
-        await studentService.FilteringProcesses(searchingText, chosenOption, chosenState);
+        currentPage = 1;
+        await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
         await RefreshStatistics();
         await GetUpdatedList();
     }

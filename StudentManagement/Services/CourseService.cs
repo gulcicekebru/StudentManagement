@@ -197,21 +197,5 @@ namespace StudentManagement.Services
 
             }
         }
-
-        //public async Task<List<<StudentCourse>> GetSelectedStudent(int studentId)
-        //{
-        //    using (var _context = _contextFactory.CreateDbContext())
-        //    {
-        //        var selectedStudentList = _context.StudentCourses.AsQueryable();
-
-        //         selectedStudentList =  _context.StudentCourses.Where(x => (x.StudentId == studentId));
-
-        //        return await selectedStudentList.
-        //        Include(x => x.Student)
-        //        .Include(x => x.Course)
-        //        .ToListAsync();
-
-        //    }
-        //}
     }
 }

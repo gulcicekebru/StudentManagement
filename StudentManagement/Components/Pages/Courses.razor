@@ -21,21 +21,18 @@
             <IconCard Title="@countInfosList[0].CountHeaderName"
                       Value=@countInfosList[0].HeaderCount
                       IconClass="bi bi-people-fill" />
-
         </div>
 
         <div class="istatistik-box">
             <IconCard Title="@countInfosList[1].CountHeaderName"
                       Value=@countInfosList[1].HeaderCount
                       IconClass="bi bi-book" />
-
         </div>
 
         <div class="istatistik-box">
             <IconCard Title="@countInfosList[2].CountHeaderName"
                       Value=@countInfosList[2].HeaderCount
                       IconClass="bi bi-window-stack" />
-
         </div>
     </div>
 }
@@ -335,9 +332,7 @@
     }
 
     private async Task Clear()
-    {
-        
+    {        
         await GetUpdatedList();
-
     }
 }

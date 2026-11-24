@@ -133,11 +133,20 @@ namespace StudentManagement.Services
             }
         }
 
-        public async Task<List<Student>> FilteringProcesses(string searchText, string filterOption, string passedStatus)
+        public async Task<PaginatedResult<Student>> FilteringProcesses(string searchText, string filterOption, string passedStatus, int pageNumber, int pageSize)
         {
             using (var _context = _contextFactory.CreateDbContext())
             {
                 var tempList = _context.Students.AsQueryable();
+
+                if (pageNumber <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(pageNumber), "Page number must be greater than zero");
+                }
+                if (pageSize <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero");
+                }
 
                 // arama dolu mu?
                 if (!string.IsNullOrWhiteSpace(searchText))
@@ -147,7 +156,6 @@ namespace StudentManagement.Services
                 //state (passed, not passed) seçildi mi?
                 if (!string.IsNullOrWhiteSpace(passedStatus))
                 {
-
                     // tempList = tempList.Where(x => x.Status == passedStatus);
                     // status sınıf içerisinde midterm ve final değerlerinden hesaplandığından burada
                     // sql üzerindeki bilgilerden erişmek lazım yani o matematiği tekrar yapmak gerek.
@@ -200,7 +208,17 @@ namespace StudentManagement.Services
                     }
                     
                 }
-                return await tempList.ToListAsync();
+
+                int totalStudents = await tempList.CountAsync();
+
+                int totalPageNumber = Math.Max(1, (int)Math.Ceiling((double)totalStudents / pageSize));
+
+                var students = await tempList.AsNoTracking()
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize).ToListAsync();
+
+                return new PaginatedResult<Student>(students, totalStudents, totalPageNumber, pageNumber, pageSize);
+
             }
         }
 

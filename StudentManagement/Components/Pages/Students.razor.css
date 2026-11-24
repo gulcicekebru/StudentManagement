@@ -59,9 +59,8 @@
 }
 .form-table-div {
     display: flex;
-    flex-direction: row;
+    flex-direction: row; 
     
-
 }
 .icon-total{
     background-color:lightpink;
@@ -69,26 +68,28 @@
 .add-form-div {
     margin-top: 5px;
     margin-right: 20px;
-    border: solid;
-    border-radius: 20px;
-    border-color: purple;
     flex: 1;
-    padding-top: 10px;
-    padding-right: 20px;
-    padding-bottom: 10px;
-    padding-left: 20px;
 }
 .form-group{
     margin-top:10px;
+}
+
+::deep .edit-from-add {
+    padding-top:20px;
+    padding-bottom:20px;
+    padding-right:20px;
+    padding-left:20px;
+    border: solid;
+    border-radius: 20px;
+    border-color: purple;
+    flex: 1;  
+    margin-left:40px;
 }
 
 .table-div {
     flex: 4;
 }
 
-    .edit-from-add {
-
-    }
 .add-text{
     font-family:Arial;
     font-size:20px;
@@ -148,6 +149,32 @@
     padding-right:30px;
     flex:3;
 }
+.btn-previous {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-right:10px;
+}
+.btn-next {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-left:10px;
+}
 .btn-update {
     background-color: purple;
     border: none;
@@ -176,4 +203,7 @@
 }
 .error-text{
     color:red;
+}
+.pagination-buttons{
+    margin-top:10px;
 }
