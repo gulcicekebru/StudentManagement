@@ -141,21 +141,15 @@
                 </td>
             </tr>
         }
-
-        <div class="pagination-buttons">
-            @if (CanGoPrevious)
-            {
-                <button class="btn-previous" type="button" @onclick="@(() => @PreviousPage())">Previous</button>
-            }
-
-            <label>@pageNumber of @totalPage</label>
-            @if (CanGoNext)
-            {
-                <button class="btn-next" type="button" @onclick="@(() => @NextPage())">Next</button>
-            }
-        </div>
     </tbody>
 </table>
+@if (paginatedResult != null)
+{
+    <Pagination CurrentPage="@paginatedResult.CurrentPage" TotalPage="@paginatedResult.TotalPages" OnPageToShow="@GoWantedPage">
+    </Pagination>
+}
+
+
 @if (isErrorModalOpen)
 {
     <MyErrorModal @bind-isVisible="isErrorModalOpen" Title="Error List" OnConfirm="@(() => CloseErrorModal())">
@@ -196,6 +190,7 @@
     int pageNumber = 1;
     int pageSize = 5;
     int totalPage;
+    
     private PaginatedResult<StudentCourse>? paginatedResult;
 
     private bool CanGoNext =>
@@ -256,6 +251,20 @@
             errorMessage = ex.Message;
         }
     }
+    private async Task GoWantedPage(int wantedPageNum)
+    {
+        try
+        {
+            paginatedResult = await courseService.FilteringProcesses(searchingText, selectedCourse, wantedPageNum, pageSize);
+            studentAndCoursesList = paginatedResult.Items;
+        }
+        catch (Exception ex)
+        {
+            errorList.Add(ex.Message);
+            isErrorModalOpen = true;
+        }
+    }
+
     private async Task ConfirmEnrollment()
     {
         await EnrollStudent(addedStudent, addedCourse);
@@ -325,53 +334,6 @@
         }
     }
 
-    private async Task PreviousPage()
-    {
-        try
-        {
-            paginatedResult = await courseService.FilteringProcesses(searchingText, selectedCourse, pageNumber, pageSize);
-            if (paginatedResult != null && pageNumber > 1 && pageNumber <= paginatedResult.TotalPages)
-            {
-                --pageNumber;
-                errorList.Clear();
-                await GetUpdatedList();
-            }
-            if (pageNumber == 1)
-            {
-                await GetUpdatedList();
-            }
-        }
-        catch (Exception ex)
-        {
-            errorList.Add(ex.Message);
-            isErrorModalOpen = true;
-        }
-
-    }
-
-    private async Task NextPage()
-    {
-        try
-        {
-            paginatedResult = await courseService.FilteringProcesses(searchingText, selectedCourse, pageNumber, pageSize);
-            if (paginatedResult != null && pageNumber < paginatedResult.TotalPages)
-            {
-                ++pageNumber;
-                errorList.Clear();
-                await GetUpdatedList();
-            }
-            if (paginatedResult != null && (pageNumber == paginatedResult.TotalPages || pageNumber > paginatedResult.TotalPages))
-            {
-                errorList.Clear();
-
-            }
-        }
-        catch (Exception ex)
-        {
-            errorList.Add(ex.Message);
-            isErrorModalOpen = true;
-        }
-    }
     private async Task FilterStudentsandCourses()
     {
 

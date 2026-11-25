@@ -97,8 +97,7 @@ namespace StudentManagement.Services
                 return await _context.StudentCourses.
                     Include(x => x.Student)
                     .Include(x => x.Course)
-                    .ToListAsync();
-                
+                    .ToListAsync();               
             }
         }
 

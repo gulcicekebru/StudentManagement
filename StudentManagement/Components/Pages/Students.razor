@@ -160,22 +160,14 @@
                             </td>
                         </tr>
                         }
-                        <div class="pagination-buttons">
-                        @if (CanGoPrevious)
-                        {
-                            <button class="btn-previous" type="button" @onclick="@(() => @PreviousPage())">Previous</button>
-                        }
-                        
-                        <label>@currentPage of @totalPage</label>
-                            @if (CanGoNext)
-                        {
-                            <button class="btn-next" type="button" @onclick="@(() => @NextPage())">Next</button>
-                        }
-                        </div>
+
 
                         
                 </tbody>
+
             </table>
+                <Pagination CurrentPage="@paginatedResult.CurrentPage" TotalPage="@paginatedResult.TotalPages" OnPageToShow="@GoWantedPage">
+                </Pagination>
 
         </EditForm>
 
@@ -305,63 +297,21 @@
         currentPage = paginatedResult.CurrentPage;
     }
 
-    // private int currentPage = 1;
-    // private int pageSize = 10;
-    // private PaginatedResult<Student>? paginatedResult;
 
-    private async Task NextPage()
+    private async Task GoWantedPage(int wantedPageNum)
     {
         try
         {
-            paginatedResult = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
-            if(paginatedResult != null && currentPage < paginatedResult.TotalPages)
-            {
-                ++currentPage;                 
-                errorList.Clear();                
-                await GetUpdatedList();              
-            }
-            if (paginatedResult != null && (currentPage == paginatedResult.TotalPages || currentPage > paginatedResult.TotalPages))
-            {
-                errorList.Clear();
+            paginatedResult = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, wantedPageNum, pageSize);
+            studentList = paginatedResult.Items;
 
-            }           
-        }
-        catch(Exception ex)
-        {
-            errorList.Add(ex.Message);
-            isErrorModalOpen = true;
-        }
-        // Son sayfada olup olmadığını kontrol etmeli.
-        // Son sayfada değilse currentPage değerini 1 artırmalı.
-        // Yeni sayfanın öğrencilerini servisten çekip paginatedResult değişkenine atamalı.
-    }
-
-    private async Task PreviousPage()
-    {
-        try
-        {
-            paginatedResult = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
-            if (paginatedResult != null && currentPage > 1 && currentPage <= paginatedResult.TotalPages)
-            {
-                --currentPage;
-                errorList.Clear();
-                await GetUpdatedList();
-            }
-            if(currentPage == 1)
-            {
-                await GetUpdatedList();
-            }
         }
         catch (Exception ex)
         {
             errorList.Add(ex.Message);
             isErrorModalOpen = true;
         }
-        // Son sayfada olup olmadığını kontrol etmeli.
-        // Son sayfada değilse currentPage değerini 1 artırmalı.
-        // Yeni sayfanın öğrencilerini servisten çekip paginatedResult değişkenine atamalı.
-
-
+        
     }
     private async Task CloseErrorModal()
     {
