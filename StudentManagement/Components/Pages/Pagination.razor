@@ -1,0 +1,70 @@
+﻿
+<div class="pagination-buttons">
+    @if (CanGoPrevious)
+    {
+        <button class="btn-previous" 
+                style="    background-color: purple;
+            border: none;
+            color: white;
+            padding: 5px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 20px;
+            margin-right:10px;"
+        type="button" 
+        @onclick="@(() => PageToShow(CurrentPage - 1))">Previous</button>
+    }
+
+    <label>@CurrentPage of @TotalPage</label>
+    @if (CanGoNext)
+    {
+        <button class="btn-next"
+                style="    background-color: purple;
+            border: none;
+            color: white;
+            padding: 5px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 20px;
+            margin-left:10px;"
+        type="button"
+        @onclick="@(() => PageToShow(CurrentPage + 1))">Next</button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int TotalPage { get; set; }
+
+    [Parameter]
+    public int CurrentPage { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageToShow { get; set; }
+
+
+    private bool CanGoNext =>
+    CurrentPage < TotalPage;
+
+    private bool CanGoPrevious =>
+    CurrentPage > 1;
+
+    private async Task PageToShow(int wantedPageNumber)
+    {
+        if(wantedPageNumber <= 0 || wantedPageNumber > TotalPage)
+        {
+            return;
+        }
+
+        await OnPageToShow.InvokeAsync(wantedPageNumber);
+      
+    }
+    }
+
+
