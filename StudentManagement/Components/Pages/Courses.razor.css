@@ -137,4 +137,29 @@
     margin-bottom: 10px;
     border-radius: 20px;
 }
-
+.btn-previous {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-right:10px;
+}
+.btn-next {
+    background-color: purple;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 20px;
+    margin-left: 10px;
+}

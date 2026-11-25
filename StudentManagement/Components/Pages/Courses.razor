@@ -98,10 +98,10 @@
 
     <div class="filter-form-div">
 
-    <input class="form-search" type="text" @bind="searchingText" @bind:event="oninput" placeholder="Search..." @bind:after="SearchStudentsandCourses" />
+    <input class="form-search" type="text" @bind="searchingText" @bind:event="oninput" placeholder="Search..." @bind:after="FilterStudentsandCourses" />
 
-    <InputSelect class="form-select" @bind-Value="selectedCourse" @bind-Value:after="() => GetSelectCourse(selectedCourse)">
-        <option value="" disabled selected>Filter Course</option>
+    <InputSelect class="form-select" @bind:event="onchange" @bind-Value="selectedCourse" @bind-Value:after="() => FilterStudentsandCourses()">
+        <option value="" disabled selected>Select an option</option>
         @foreach (var course in courses)
         {
             <option value="@course.CourseId">@course.CourseName</option>
@@ -141,14 +141,30 @@
                 </td>
             </tr>
         }
+
+        <div class="pagination-buttons">
+            @if (CanGoPrevious)
+            {
+                <button class="btn-previous" type="button" @onclick="@(() => @PreviousPage())">Previous</button>
+            }
+
+            <label>@pageNumber of @totalPage</label>
+            @if (CanGoNext)
+            {
+                <button class="btn-next" type="button" @onclick="@(() => @NextPage())">Next</button>
+            }
+        </div>
     </tbody>
 </table>
 @if (isErrorModalOpen)
 {
     <MyErrorModal @bind-isVisible="isErrorModalOpen" Title="Error List" OnConfirm="@(() => CloseErrorModal())">
-
-        <li>@errorMessage</li>
-
+        <ul>
+            @foreach (var error in errorList)
+            {
+                <li class ="error-text">@error</li>
+            }
+        </ul>       
 
     </MyErrorModal>
 }
@@ -170,12 +186,25 @@
     private List<StudentTableHeaders> modalHeaderList = new();
     private int buttonBehavior;
     private string errorMessage = string.Empty;
+    private List<string> errorList = new();
     private List<StudentCourse> studentAndCoursesList = new();
     private string searchingText = string.Empty;
     private int selectedCourse;
     private int searchVersion = 0;
     private bool isModalOpen = false;
     private bool isErrorModalOpen = false;
+    int pageNumber = 1;
+    int pageSize = 5;
+    int totalPage;
+    private PaginatedResult<StudentCourse>? paginatedResult;
+
+    private bool CanGoNext =>
+    paginatedResult is not null &&
+    paginatedResult.CurrentPage < paginatedResult.TotalPages;
+
+    private bool CanGoPrevious =>
+    paginatedResult is not null &&
+    paginatedResult.CurrentPage > 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -183,7 +212,7 @@
 
         studentCount = await studentService.GetStudentsCount();
         courseCount = await courseService.GetCourseCountAsync();
-        enrollementCount = studentAndCoursesList.Count;
+        enrollementCount = await courseService.GetEnrollmentCount();
 
         await courseService.InitializeCoursesAsync();
         initializeCount = 0;
@@ -220,7 +249,7 @@
                     UniqueName = "btn-" + modalHeaderName
                 });
             }
-            studentAndCoursesList = await courseService.GetEnrollmentsAsync();
+            //studentAndCoursesList = await courseService.GetEnrollmentsAsync();
         }
         catch (Exception ex)
         {
@@ -250,7 +279,7 @@
     }
     private async Task CloseErrorModal()
     {
-        errorMessage="";
+        errorList.Clear();
         isErrorModalOpen = false;
     }
 
@@ -275,7 +304,11 @@
 
     private async Task GetUpdatedList()
     {
-        studentAndCoursesList = await courseService.GetEnrollmentsAsync();
+        paginatedResult = await courseService.FilteringProcesses(searchingText, selectedCourse, pageNumber, pageSize);
+
+        studentAndCoursesList = paginatedResult.Items;
+        totalPage = paginatedResult.TotalPages;
+        pageNumber = paginatedResult.CurrentPage;
 
     }
 
@@ -292,33 +325,66 @@
         }
     }
 
-    private async Task GetSelectCourse(int courseId)
+    private async Task PreviousPage()
     {
-        if (courseId == 0)
+        try
         {
-            await GetUpdatedList();
+            paginatedResult = await courseService.FilteringProcesses(searchingText, selectedCourse, pageNumber, pageSize);
+            if (paginatedResult != null && pageNumber > 1 && pageNumber <= paginatedResult.TotalPages)
+            {
+                --pageNumber;
+                errorList.Clear();
+                await GetUpdatedList();
+            }
+            if (pageNumber == 1)
+            {
+                await GetUpdatedList();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            studentAndCoursesList = await courseService.GetSelectedCourse(courseId);
-            StateHasChanged();
+            errorList.Add(ex.Message);
+            isErrorModalOpen = true;
         }
+
     }
 
-    private async Task SearchStudentsandCourses()
+    private async Task NextPage()
+    {
+        try
+        {
+            paginatedResult = await courseService.FilteringProcesses(searchingText, selectedCourse, pageNumber, pageSize);
+            if (paginatedResult != null && pageNumber < paginatedResult.TotalPages)
+            {
+                ++pageNumber;
+                errorList.Clear();
+                await GetUpdatedList();
+            }
+            if (paginatedResult != null && (pageNumber == paginatedResult.TotalPages || pageNumber > paginatedResult.TotalPages))
+            {
+                errorList.Clear();
+
+            }
+        }
+        catch (Exception ex)
+        {
+            errorList.Add(ex.Message);
+            isErrorModalOpen = true;
+        }
+    }
+    private async Task FilterStudentsandCourses()
     {
 
         int currentVersion = ++searchVersion;
         try
         {
-            var results = await courseService.SearchStudents(searchingText);
+            var results = await courseService.FilteringProcesses(searchingText, selectedCourse, pageNumber,pageSize);
 
             if (currentVersion != searchVersion)
                 return;
 
-            studentAndCoursesList = results;
+            studentAndCoursesList = results.Items;
             errorMessage = "";
-            //await OnInitializedAsync();
 
             StateHasChanged();
         }
@@ -328,11 +394,14 @@
                 return;
             errorMessage = $"An error accured {ex}";
         }
+        await GetUpdatedList();
 
     }
 
     private async Task Clear()
-    {        
+    {
+        searchingText = "";
+        selectedCourse = 0;
         await GetUpdatedList();
     }
 }

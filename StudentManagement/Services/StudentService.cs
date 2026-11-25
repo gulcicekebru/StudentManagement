@@ -189,6 +189,7 @@ namespace StudentManagement.Services
                             break;
                         case "Final1":
                             tempList = tempList.OrderBy(x => x.Final);
+                            tempList = tempList.OrderBy(x => x.Final);
                             break;
                         case "Final0":
                             tempList = tempList.OrderByDescending(x => x.Final);
