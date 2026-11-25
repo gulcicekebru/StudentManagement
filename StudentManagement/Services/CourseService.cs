@@ -134,36 +134,35 @@ namespace StudentManagement.Services
             }
         }
 
-        //public async Task<List<StudentCourse>> FilteringProcesses(string filterOption)
-        //{
-        //    using (var _context = _contextFactory.CreateDbContext())
-        //    {
-        //        var tempList = _context.StudentCourses.AsQueryable();
+        public async Task<PaginatedResult<StudentCourse>> FilteringProcesses(string searchText, int? courseId, int pageNumber, int pageSize)
+        {
+            using (var _context = _contextFactory.CreateDbContext())
+            {
+                var tempList = _context.StudentCourses
+                    .Include(x => x.Student)
+                    .Include(x => x.Course)
+                    .AsQueryable();
 
+                if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    tempList = tempList.Where(x => (x.Student.Name.Contains(searchText) || x.Student.LastName.Contains(searchText) || x.Course.CourseName.Contains(searchText)));
+                }
+                if (courseId>0)
+                {
+                    tempList = tempList.Where(x => (x.CourseId == courseId));
+                }               
 
-        //        if (!string.IsNullOrWhiteSpace(filterOption))
-        //        {
+                int totalEnrollments = await tempList.CountAsync();
 
-        //            switch (filterOption)
-        //            {
-        //                case "Name0":
-        //                    tempList = tempList.OrderBy(x => x.Student.Name);
-        //                    break;
-        //                case "Name1":
-        //                    tempList = tempList.OrderByDescending(x => x.Student.Name);
-        //                    break;
-        //                case "Course0":
-        //                    tempList = tempList.OrderBy(x => x.Course.CourseName);
-        //                    break;
-        //                case "Course1":
-        //                    tempList = tempList.OrderByDescending(x => x.Course.CourseName);
-        //                    break;
-        //            }
+                int totalPageNumber = Math.Max(1, (int)Math.Ceiling((double)totalEnrollments / pageSize));
 
-        //        }
-        //        return await tempList.ToListAsync();
-        //    }
-        //}
+                var courses = await tempList.AsNoTracking()
+                   .Skip((pageNumber - 1) * pageSize)
+                   .Take(pageSize).ToListAsync();
+
+                return new PaginatedResult<StudentCourse>(courses, totalEnrollments, totalPageNumber, pageNumber, pageSize);
+            }
+        }
 
         public async Task<List<StudentCourse>> SearchStudents(string searchText)
         {
