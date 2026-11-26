@@ -54,7 +54,7 @@ namespace StudentManagement.Services
         }
 
         public async Task<int> GetStudentsCount()
-        {
+         {
             using (var _context = _contextFactory.CreateDbContext())
             {
                 return await _context.Students.CountAsync();
@@ -64,7 +64,7 @@ namespace StudentManagement.Services
         public async Task<double?> GetClassAverage(List<Student> updatedList)
         {
                 double? sum = 0;
-                foreach (var student in updatedList)
+                foreach (var student     in updatedList)
                 {
                     sum += student.Average;
                 }

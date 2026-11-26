@@ -93,6 +93,8 @@
 
 
 
+
+
     @if (isLoading)
     {
         <label>@errorTableMessage</label>
@@ -165,11 +167,29 @@
                         
                 </tbody>
 
-            </table>
+            </table> @* bind ekleyebilir miyiz paginatedResult için *@
                 <Pagination CurrentPage="@paginatedResult.CurrentPage" TotalPage="@paginatedResult.TotalPages" OnPageToShow="@GoWantedPage">
                 </Pagination>
 
         </EditForm>
+            <div class="outer-div" style="display:flex;
+                flex-direction:column;
+                position:fixed;
+                top:55px;
+                right:0;
+                padding-bottom:100px;
+                gap:10px;">
+            @foreach(var notificationMessage in notificationList)
+            {
+                
+
+                <TostNotification @key="notificationMessage" @bind-IsVisible="notificationMessage.IsVisible" NotificationText="@notificationMessage.NotificationText" NotificationType="@notificationMessage.NotificationType" >
+
+                    </TostNotification>
+
+            }
+            </div>
+
 
             </div>
 
@@ -224,6 +244,7 @@
     private List<string> stateOptions = new List<string>() { "Passed", "Not Passed" };
     private EditContext? editContext;
     private List<string>? errorList = new();
+    private List<Notification> notificationList = new();
 
 
 
@@ -233,6 +254,8 @@
     private string searchingText = string.Empty;
     private string chosenState = string.Empty;
     private bool isErrorModalOpen = false;
+
+
 
     private string butonId = "btn-";
 
@@ -252,6 +275,7 @@
     private bool CanGoPrevious =>
     paginatedResult is not null &&
     paginatedResult.CurrentPage > 1;
+    private bool isToastNotificationOpen = false;
 
 
 
@@ -311,8 +335,14 @@
             errorList.Add(ex.Message);
             isErrorModalOpen = true;
         }
-        
+
     }
+
+    private async Task ClearNotificationList()
+    {
+        notificationList.Clear();
+    }
+
     private async Task CloseErrorModal()
     {
         errorList.Clear();
@@ -333,11 +363,14 @@
             isLoading = false;
             student = new();
             isErrorModalOpen = false;
+            notificationList.Add(new Notification(true, 1, "Student added successfuly."));
+
         }
         catch(Exception ex)
         {
             errorMessage = ex.Message;
             isAddable = false;
+
 
             if(errorList.Count != 0)
             {
@@ -360,6 +393,10 @@
 
     private void ClearForm()
     {
+        if (string.IsNullOrWhiteSpace(student.Name) && string.IsNullOrWhiteSpace(student.LastName) && student.Midterm == null && student.Final == null)
+        {
+            AddNotification(new Notification(true, 2, "Fields already empty."));
+        }
         student = new Student();
         student.Name = string.Empty;
         student.LastName = string.Empty;
@@ -407,6 +444,9 @@
             isModalOpen = false;
 
             errorList.Clear();
+
+            AddNotification(new Notification(true, 1, "Student updated successfully."));
+
 
             await RefreshStatistics();
             await GetUpdatedList();
@@ -470,7 +510,7 @@
         {
             currentPage = 1;
             await GetUpdatedList();
-            
+
             var tempPaginated = await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
             var results = tempPaginated.Items;
 
@@ -510,13 +550,38 @@
 
     private async Task ClearFilters()
     {
-        chosenOption = string.Empty;
-        isSearching = false;
-        searchingText = string.Empty;
-        chosenState = string.Empty;
-        currentPage = 1;
-        await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
-        await RefreshStatistics();
-        await GetUpdatedList();
+
+        if (!string.IsNullOrWhiteSpace(searchingText) && !string.IsNullOrWhiteSpace(chosenOption))
+        {
+            chosenOption = string.Empty;
+            isSearching = false;
+            searchingText = string.Empty;
+            chosenState = string.Empty;
+            currentPage = 1;
+            await studentService.FilteringProcesses(searchingText, chosenOption, chosenState, currentPage, pageSize);
+            await RefreshStatistics();
+            await GetUpdatedList();
+        }
+        else
+        {
+            AddNotification(new Notification(true, 2, "Filter options not selected."));
+
+        }
+ 
     }
+
+    public void AddNotification(Notification notification)
+    {
+       if(notification != null)
+       {
+           notificationList.Add(notification);
+       }
+       else
+       {
+           throw new Exception("Notification is empty");
+       }
+
+    }
+
+    
 }
