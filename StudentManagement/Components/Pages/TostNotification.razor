@@ -1,0 +1,84 @@
+﻿@if (IsVisible)
+{
+
+    <div class="outer-div" role="dialog" data-durum="@NotificationType">
+        <div class="rounded-circle p-3 me-3 text-primary" style="
+             color:black; flex:1;">
+            <i class="@IconClass fs-3" style=" position:center; padding-left:10px;"></i>
+        </div>
+        <div class="header-text">
+            <div class="toast-header">
+                <h5 class="toast-title">@NotificationHeader</h5>
+            </div>
+            <div>
+                <label class="notification-text">@NotificationText</label>
+            </div>
+        </div>
+        <div class="buton-div">
+            <button type="button" class="btn-close" @onclick="CloseModal"></button>
+        </div>
+    </div>
+    
+}
+
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public string NotificationText { get; set; } = string.Empty;
+
+    
+    private TimeSpan Duration = TimeSpan.FromSeconds(5);
+    
+    private string NotificationHeader => NotificationType switch
+    {
+        0 => "Error", //error
+        1 => "Success", //success
+        2 => "Warning", //warning
+        _ => "Info" //info
+    };
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public int NotificationType { get; set; }
+
+    
+    private string IconClass => NotificationType switch
+    {
+        
+        0 => "bi bi-x-circle-fill", //error
+        1 => "bi bi-check-circle-fill", //success
+        2 => "bi bi-exclamation-triangle-fill", //warning
+        _ => "bi bi-info-circle-fill" //info
+    };
+
+    private bool wasVisible = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        bool shouldStart = IsVisible && !wasVisible; // true 
+
+        wasVisible = IsVisible; // wasvisible true
+
+        if (shouldStart) //true
+        {
+            await AutoCloseAsync();
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private async Task AutoCloseAsync()
+    {
+        await Task.Delay(Duration); // 10 sn delay
+        await CloseModal(); 
+    }
+}
