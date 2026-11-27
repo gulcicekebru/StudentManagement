@@ -6,6 +6,7 @@
 
 @inject StudentManagement.Services.StudentService studentService
 @inject StudentManagement.Services.CourseService courseService
+@inject StudentManagement.Services.NotificationService notificationService
 @inject IJSRuntime JS
 
 
@@ -162,23 +163,7 @@
     </MyErrorModal>
 }
 
-<div class="outer-div" style="display:flex;
-    flex-direction:column;
-    position:fixed;
-    top:55px;
-    right:0;
-    padding-bottom:100px;
-    gap:10px;">
-    @foreach (var notificationMessage in notificationList)
-    {
-
-
-        <TostNotification @key="notificationMessage" @bind-IsVisible="notificationMessage.IsVisible" NotificationText="@notificationMessage.NotificationText" NotificationType="@notificationMessage.NotificationType">
-
-        </TostNotification>
-
-    }
-</div>
+<NotificatinContainer/>
 
 
 @code {
@@ -207,7 +192,7 @@
     int pageNumber = 1;
     int pageSize = 5;
     int totalPage;
-    private List<Notification> notificationList = new();
+    
 
     private PaginatedResult<StudentCourse>? paginatedResult;
 
@@ -346,7 +331,7 @@
 
         if (confirmed)
         {
-            notificationList.Add(new Notification(true, 1, "Enrollement deleted successfuly."));
+            notificationService.AddNotification(new Notification(true, 1, "Enrollement deleted successfuly."));
             
             await courseService.DeleteEnrollment(studentId, courseId);           
             await GetUpdatedList();

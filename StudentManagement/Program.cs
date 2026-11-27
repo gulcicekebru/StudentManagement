@@ -15,6 +15,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<CourseService>();
+builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents().AddInteractiveServerComponents();
 

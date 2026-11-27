@@ -1,0 +1,45 @@
+﻿@implements IDisposable
+
+@using StudentManagement.Components.Pages
+@* 
+NotificationService içerisindeki bildirimleri okumak.
+foreach ile TostNotification component'lerini oluşturmak.
+Service içerisinde yeni bildirim eklendiğinde kendisini yeniden render etmek. *@
+@inject StudentManagement.Services.NotificationService notificationService
+
+
+<div class="outer-div" style="display:flex;
+                flex-direction:column;
+                position:fixed;
+                top:55px;
+                right:0;
+                padding-bottom:100px;
+                gap:10px;">
+        @foreach (var notification in notificationService.NotificationList)
+        {
+         <TostNotification @key="notification" @bind-IsVisible="notification.IsVisible" NotificationText="@notification.NotificationText"
+                        NotificationType="notification.NotificationType"
+            ></TostNotification>
+        }
+</div>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        notificationService.NotificationAction += RefreshUI;
+    }
+
+
+    private void RefreshUI()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        notificationService.NotificationAction -= RefreshUI;
+    }
+
+}
